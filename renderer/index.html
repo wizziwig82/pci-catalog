@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+  <title>PCI File Manager</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>PCI File Manager</h1>
+    </header>
+    
+    <main>
+      <section class="file-upload">
+        <h2>Upload Files</h2>
+        <button id="selectFilesBtn" class="btn primary">Select Files</button>
+        <div id="fileList" class="file-list"></div>
+      </section>
+      
+      <section class="settings-section">
+        <h2>Settings</h2>
+        <form id="settingsForm">
+          <div class="form-group">
+            <label for="r2AccountId">R2 Account ID:</label>
+            <input type="text" id="r2AccountId" placeholder="Your Cloudflare account ID">
+          </div>
+          
+          <div class="form-group">
+            <label for="r2AccessKeyId">R2 Access Key ID:</label>
+            <input type="text" id="r2AccessKeyId" placeholder="Your R2 access key ID">
+          </div>
+          
+          <div class="form-group">
+            <label for="r2SecretKey">R2 Secret Access Key:</label>
+            <input type="password" id="r2SecretKey" placeholder="Your R2 secret access key">
+          </div>
+          
+          <div class="form-group">
+            <label for="r2BucketName">R2 Bucket Name:</label>
+            <input type="text" id="r2BucketName" placeholder="Your R2 bucket name">
+          </div>
+          
+          <div class="form-group">
+            <label for="mongoUri">MongoDB URI:</label>
+            <input type="text" id="mongoUri" placeholder="mongodb://localhost:27017/pci-files">
+          </div>
+          
+          <button type="submit" class="btn primary">Save Settings</button>
+        </form>
+      </section>
+    </main>
+    
+    <footer>
+      <p>PCI File Manager &copy; 2023</p>
+    </footer>
+  </div>
+  
+  <script src="renderer.js"></script>
+</body>
+</html>

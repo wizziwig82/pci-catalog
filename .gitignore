@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+/dist
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build files
+/dist
+/build
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+*.log
+
+# Editor directories and files
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Testing
+/coverage
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Audio files
+*.mp3
+*.wav
+*.flac
+*.aac
+*.ogg
+/uploads
+
+# Generated files
+.docusaurus
+.cache-loader
+
+# FFmpeg temporary files
+*.ffindex
+
+# MongoDB data
+/data/db
+
+# Electron specific
+dist/
+.env
