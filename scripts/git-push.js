@@ -12,11 +12,12 @@ console.log('First few chars of token:', token ? token.substring(0, 4) : 'none')
 
 const branch = process.argv[2] || 'main';
 const commitMessage = process.argv[3] || 'Update from script';
-// Use the exact repository URL provided by the user
-const repoUrlWithAuth = `https://${username}:${token}@github.com/wizziwig82/pci-catalog.git`;
+
+// Try a different URL format for fine-grained PATs
+const repoUrlWithAuth = `https://oauth2:${token}@github.com/wizziwig82/pci-catalog.git`;
 
 // Debug the URL (but mask most of the token)
-const maskedUrl = `https://${username}:${token ? token.substring(0, 4) + '...' : 'none'}@github.com/wizziwig82/pci-catalog.git`;
+const maskedUrl = `https://oauth2:${token ? token.substring(0, 4) + '...' : 'none'}@github.com/wizziwig82/pci-catalog.git`;
 console.log('Using repo URL:', maskedUrl);
 
 try {
