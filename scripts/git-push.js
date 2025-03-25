@@ -3,27 +3,22 @@ require('dotenv').config();
 const { execSync } = require('child_process');
 const path = require('path');
 const username = process.env.GITHUB_USERNAME;
-const token = process.env.GITHUB_TOKEN;
 
 // Add debugging
 console.log('Username:', username);
-console.log('Token length:', token ? token.length : 0);
-console.log('First few chars of token:', token ? token.substring(0, 4) : 'none');
+console.log('Using SSH authentication');
 
 const branch = process.argv[2] || 'main';
 const commitMessage = process.argv[3] || 'Update from script';
 
-// Try a different URL format for fine-grained PATs
-const repoUrlWithAuth = `https://oauth2:${token}@github.com/wizziwig82/pci-catalog.git`;
-
-// Debug the URL (but mask most of the token)
-const maskedUrl = `https://oauth2:${token ? token.substring(0, 4) + '...' : 'none'}@github.com/wizziwig82/pci-catalog.git`;
-console.log('Using repo URL:', maskedUrl);
+// Use SSH URL instead of HTTPS with token
+const repoUrl = `git@github.com:wizziwig82/pci-catalog.git`;
+console.log('Using repo URL:', repoUrl);
 
 try {
   execSync('git add .', { stdio: 'inherit' });
   execSync(`git commit -m "${commitMessage}"`, { stdio: 'inherit' });
-  execSync(`git remote set-url origin ${repoUrlWithAuth}`);
+  execSync(`git remote set-url origin ${repoUrl}`);
   execSync(`git push -u origin ${branch}`, { stdio: 'inherit' });
   console.log('Push completed successfully!');
 } catch (error) {
