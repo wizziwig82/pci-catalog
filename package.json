@@ -1,6 +1,6 @@
 {
   "name": "pci-file-manager",
-  "version": "1.0.0",
+  "version": "1.0.0-rc.1",
   "description": "PCI File Manager - A file management application with Cloudflare R2 integration and MongoDB",
   "main": "main.js",
   "scripts": {
