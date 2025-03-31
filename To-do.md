@@ -27,8 +27,8 @@ This to-do list outlines the steps to build a music management app, covering set
 
 ### 1.4 Develop Bulk Upload Functionality
 
-- [ ] Create a UI component in Svelte for selecting multiple music files.
-- [ ] Implement file reading and metadata extraction (e.g., using a library like audio-metadata).
+- [x] Create a UI component in Svelte for selecting multiple music files.
+- [x] Implement file reading and metadata extraction (e.g., using a library like audio-metadata).
 - [ ] Set up transcoding with ffmpeg-rs to generate low, medium, and original quality versions of each track.
 - [ ] Upload transcoded files to R2 with organized paths (e.g., /tracks/{quality}/{filename}).
 - [ ] Store metadata in MongoDB, linking tracks to albums via album_id.

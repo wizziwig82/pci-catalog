@@ -4,6 +4,10 @@
   function navigateToSettings() {
     window.location.href = '/settings';
   }
+  
+  function navigateToUpload() {
+    window.location.href = '/upload';
+  }
 </script>
 
 <main class="container">
@@ -14,6 +18,9 @@
     <p>This application helps you organize and manage your music library.</p>
     
     <div class="action-buttons">
+      <button class="btn btn-upload" on:click={navigateToUpload}>
+        Upload Music
+      </button>
       <button class="btn btn-settings" on:click={navigateToSettings}>
         Database Settings
       </button>
@@ -61,5 +68,14 @@
   
   .btn-settings:hover {
     background-color: #5a6268;
+  }
+  
+  .btn-upload {
+    background-color: #38a169;
+    color: white;
+  }
+  
+  .btn-upload:hover {
+    background-color: #2f855a;
   }
 </style>

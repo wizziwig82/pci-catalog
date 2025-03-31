@@ -23,6 +23,7 @@
 		<a href="/" class="nav-logo">Music Library Manager</a>
 		<div class="nav-links">
 			<a href="/" class="nav-link">Home</a>
+			<a href="/upload" class="nav-link">Upload</a>
 			<a href="/settings" class="nav-link">Settings</a>
 		</div>
 	</div>

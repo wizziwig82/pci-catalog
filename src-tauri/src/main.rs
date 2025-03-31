@@ -2,11 +2,17 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use serde::{Deserialize, Serialize};
-use tauri::{command, State};
+use tauri::{command, State, Manager};
 use tokio::sync::Mutex;
-use log::info;
+use log::{info, error};
 // Use keyring import
 use keyring::Entry; 
+use tauri_plugin_dialog::DialogExt;
+use std::fs;
+
+// Import audio module
+mod audio;
+use audio::{extract_metadata, AudioMetadata};
 
 /// Keychain service names (using keyring convention)
 const KEYCHAIN_SERVICE_MONGO: &str = "com.musiclibrarymanager.mongo";
@@ -246,10 +252,96 @@ async fn test_r2_connection(
     }
 }
 
+/// Extract metadata from an audio file
+#[command]
+async fn extract_audio_metadata(file_path: String) -> Result<AudioMetadata, String> {
+    info!("Extracting metadata from file: {}", file_path);
+    extract_metadata(&file_path)
+}
+
+/// Extract metadata from multiple audio files
+#[command]
+async fn extract_audio_metadata_batch(file_paths: Vec<String>) -> Result<Vec<AudioMetadata>, String> {
+    info!("Extracting metadata from {} files", file_paths.len());
+    
+    let mut results = Vec::with_capacity(file_paths.len());
+    
+    for path in file_paths {
+        match extract_metadata(&path) {
+            Ok(metadata) => results.push(metadata),
+            Err(e) => {
+                // Log error but continue processing other files
+                error!("Failed to extract metadata from {}: {}", path, e);
+            }
+        }
+    }
+    
+    Ok(results)
+}
+
+/// Open file dialog and return selected file paths
+#[command]
+async fn select_audio_files(app_handle: tauri::AppHandle) -> Result<Vec<String>, String> {
+    use std::sync::{Arc, Mutex as StdMutex};
+    
+    // Create channels to communicate the result
+    let (tx, rx) = std::sync::mpsc::channel();
+    let tx = Arc::new(StdMutex::new(tx));
+    
+    // Get a handle to the dialog manager and use the non-blocking pick_files
+    app_handle.dialog()
+        .file()
+        .add_filter("Audio Files", &["mp3", "wav", "flac", "aac", "m4a", "ogg", "aiff"])
+        .set_directory("/")
+        .set_title("Select Audio Files")
+        .pick_files(move |file_paths| {
+            if let Some(paths) = file_paths {
+                let path_strings = paths
+                    .iter()
+                    .map(|p| p.as_path()
+                          .map(|path| path.to_string_lossy().to_string())
+                          .unwrap_or_default())
+                    .collect::<Vec<String>>();
+                
+                let _ = tx.lock().unwrap().send(Ok(path_strings));
+            } else {
+                // User cancelled the dialog
+                let _ = tx.lock().unwrap().send(Ok(Vec::new()));
+            }
+        });
+    
+    // Wait for the result
+    match rx.recv() {
+        Ok(result) => result,
+        Err(e) => Err(format!("Failed to get file dialog result: {}", e)),
+    }
+}
+
+/// Get file statistics
+#[command]
+async fn get_file_stats(path: String) -> Result<serde_json::Value, String> {
+    info!("Getting file stats for: {}", path);
+    
+    match fs::metadata(&path) {
+        Ok(metadata) => {
+            let size = metadata.len();
+            let result = serde_json::json!({
+                "size": size,
+                "is_file": metadata.is_file(),
+                "is_dir": metadata.is_dir(),
+            });
+            
+            Ok(result)
+        },
+        Err(e) => Err(format!("Failed to get file metadata: {}", e))
+    }
+}
+
 /// Initialize the Tauri application
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_log::Builder::default().build())
+        .plugin(tauri_plugin_dialog::init())
         .manage(MongoState {
             client: Mutex::new(None),
         })
@@ -267,6 +359,10 @@ fn main() {
             init_r2_client,
             test_mongo_connection,
             test_r2_connection,
+            extract_audio_metadata,
+            extract_audio_metadata_batch,
+            select_audio_files,
+            get_file_stats,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
