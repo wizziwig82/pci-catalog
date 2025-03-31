@@ -12,12 +12,29 @@
   // Loading state
   let isLoading = false;
   let error: string | null = null;
+  // Transcoding state
+  let isTranscoding = false;
+  let transcodingProgress = 0;
+  let transcodedFiles: any[] = [];
+  // Upload state
+  let isUploading = false;
+  let uploadProgress = 0;
+  let uploadedFiles: any[] = [];
+  let failedUploads: any[] = [];
+  
+  // Transcoding options
+  let mediumBitrate = 128;
+  let outputFormat = 'mp3';
+  let outputDir = 'transcoded';
   
   // Handle file selection event from the FileUploader component
   async function handleFilesSelected(event: CustomEvent<{ files: File[] }>) {
     selectedFiles = event.detail.files;
     console.log('Selected files:', selectedFiles);
     extractedMetadata = [];
+    transcodedFiles = [];
+    uploadedFiles = [];
+    failedUploads = [];
     error = null;
     
     try {
@@ -64,6 +81,115 @@
     }
   }
   
+  // Function to transcode selected files
+  async function transcodeFiles() {
+    if (selectedFilePaths.length === 0) {
+      alert('Please select at least one file to transcode.');
+      return;
+    }
+    
+    isTranscoding = true;
+    transcodingProgress = 0;
+    transcodedFiles = [];
+    error = null;
+    
+    try {
+      console.log(`Transcoding ${selectedFilePaths.length} files with bitrate ${mediumBitrate}kbps to ${outputFormat} format`);
+      
+      // Call the Tauri command to transcode the files
+      const results = await invoke<any[]>('transcode_audio_batch', {
+        filePaths: selectedFilePaths,
+        mediumBitrate,
+        outputFormat,
+        outputDir
+      });
+      
+      transcodedFiles = results;
+      console.log('Transcoded files:', transcodedFiles);
+      
+      // Count successful transcodes
+      const successCount = results.filter(result => result.success).length;
+      if (successCount === 0) {
+        error = "No files were successfully transcoded.";
+      }
+    } catch (err) {
+      console.error('Failed to transcode files:', err);
+      error = err instanceof Error ? err.message : String(err);
+    } finally {
+      isTranscoding = false;
+      transcodingProgress = 100;
+    }
+  }
+  
+  // Function to upload files to R2 and store metadata in MongoDB
+  async function uploadFiles() {
+    if (transcodedFiles.length === 0 || extractedMetadata.length === 0) {
+      alert('Please transcode files before uploading.');
+      return;
+    }
+    
+    // Check if any transcoding was successful
+    const successfulTranscodes = transcodedFiles.filter(file => file.success);
+    if (successfulTranscodes.length === 0) {
+      alert('No files were successfully transcoded. Cannot proceed with upload.');
+      return;
+    }
+    
+    isUploading = true;
+    uploadProgress = 0;
+    uploadedFiles = [];
+    failedUploads = [];
+    error = null;
+    
+    try {
+      console.log('Uploading transcoded files to R2 and storing metadata in MongoDB');
+      
+      // Filter out metadata for files that were successfully transcoded
+      const successfulFilePaths = successfulTranscodes.map(file => file.original_path);
+      const filteredMetadata = extractedMetadata.filter(metadata => 
+        successfulFilePaths.includes(metadata.track.original_path));
+      
+      // Call the Tauri command to upload the files
+      const uploadResult = await invoke<{
+        success: boolean;
+        message: string;
+        uploaded_tracks: any[];
+        failed_tracks: any[];
+      }>('upload_transcoded_tracks', {
+        transcodingResults: successfulTranscodes,
+        audioMetadataList: filteredMetadata,
+        pathConfig: {
+          originalPrefix: 'tracks/original',
+          mediumPrefix: 'tracks/medium'
+        }
+      });
+      
+      console.log('Upload result:', uploadResult);
+      
+      if (uploadResult.uploaded_tracks) {
+        uploadedFiles = uploadResult.uploaded_tracks;
+      }
+      
+      if (uploadResult.failed_tracks) {
+        failedUploads = uploadResult.failed_tracks;
+      }
+      
+      if (uploadResult.message) {
+        if (!uploadResult.success) {
+          error = uploadResult.message;
+        } else {
+          alert(uploadResult.message);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to upload files:', err);
+      error = err instanceof Error ? err.message : String(err);
+    } finally {
+      isUploading = false;
+      uploadProgress = 100;
+    }
+  }
+  
   // Function to start the upload process
   function startUpload() {
     if (selectedFilePaths.length === 0) {
@@ -82,6 +208,9 @@
       isLoading = true;
       error = null;
       extractedMetadata = [];
+      transcodedFiles = [];
+      uploadedFiles = [];
+      failedUploads = [];
       
       // Open the file dialog to select music files
       selectedFilePaths = await invoke<string[]>('select_audio_files');
@@ -178,12 +307,129 @@
           {/each}
         </div>
       </div>
+      
+      <div class="transcoding-options">
+        <h3>Transcoding Options</h3>
+        <div class="options-form">
+          <div class="form-group">
+            <label for="medium-bitrate">Medium Quality Bitrate (kbps)</label>
+            <input 
+              id="medium-bitrate" 
+              type="number" 
+              bind:value={mediumBitrate} 
+              min="64" 
+              max="320" 
+              step="32"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="output-format">Output Format</label>
+            <select id="output-format" bind:value={outputFormat}>
+              <option value="mp3">MP3</option>
+              <option value="aac">AAC</option>
+              <option value="ogg">OGG</option>
+              <option value="flac">FLAC</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="output-dir">Output Directory</label>
+            <input 
+              id="output-dir" 
+              type="text" 
+              bind:value={outputDir} 
+            />
+          </div>
+        </div>
+      </div>
+    {/if}
+    
+    {#if isTranscoding}
+      <div class="transcoding-progress">
+        <p>Transcoding files... Please wait.</p>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: {transcodingProgress}%"></div>
+        </div>
+      </div>
+    {/if}
+    
+    {#if transcodedFiles.length > 0}
+      <div class="transcoded-files">
+        <h3>Transcoded Files</h3>
+        <div class="transcoded-list">
+          {#each transcodedFiles as file}
+            <div class="transcoded-item" class:failed={!file.success}>
+              <div class="file-path">{file.original_path.split('/').pop()}</div>
+              {#if file.success}
+                <div class="success-label">✓ Transcoded</div>
+              {:else}
+                <div class="error-label">✗ Failed: {file.error}</div>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
+    
+    {#if isUploading}
+      <div class="upload-progress">
+        <p>Uploading files to R2 and storing metadata in MongoDB... Please wait.</p>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: {uploadProgress}%"></div>
+        </div>
+      </div>
+    {/if}
+    
+    {#if uploadedFiles.length > 0 || failedUploads.length > 0}
+      <div class="uploaded-files">
+        <h3>Upload Results</h3>
+        
+        {#if uploadedFiles.length > 0}
+          <h4>Successfully Uploaded ({uploadedFiles.length})</h4>
+          <div class="uploaded-list">
+            {#each uploadedFiles as file}
+              <div class="uploaded-item">
+                <div class="file-info">
+                  <div class="file-title">{file.title}</div>
+                  <div class="file-album">Album: {file.album_name}</div>
+                </div>
+                <div class="success-label">✓ Uploaded</div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+        
+        {#if failedUploads.length > 0}
+          <h4>Failed Uploads ({failedUploads.length})</h4>
+          <div class="failed-list">
+            {#each failedUploads as file}
+              <div class="failed-item">
+                <div class="file-path">{file.original_path.split('/').pop()}</div>
+                <div class="error-label">✗ Failed: {file.error}</div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
     {/if}
     
     {#if selectedFilePaths.length > 0}
       <div class="upload-actions">
-        <button class="upload-button" on:click={startUpload} disabled={isLoading}>
-          Upload {selectedFilePaths.length} {selectedFilePaths.length === 1 ? 'File' : 'Files'}
+        <button 
+          class="transcode-button" 
+          on:click={transcodeFiles} 
+          disabled={isLoading || isTranscoding || isUploading}
+        >
+          Transcode {selectedFilePaths.length} {selectedFilePaths.length === 1 ? 'File' : 'Files'}
+        </button>
+        
+        <button 
+          class="upload-button" 
+          on:click={uploadFiles} 
+          disabled={isLoading || isTranscoding || isUploading || transcodedFiles.length === 0}
+        >
+          Upload to Library
         </button>
       </div>
     {/if}
@@ -256,111 +502,223 @@
     color: #718096;
   }
   
+  .loading, .error {
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+  }
+  
   .loading {
-    margin-top: 20px;
-    padding: 15px;
     background-color: #ebf8ff;
-    border-radius: 6px;
-    color: #2b6cb0;
-    text-align: center;
+    color: #3182ce;
   }
   
   .error {
-    margin-top: 20px;
-    padding: 15px;
     background-color: #fff5f5;
-    border-radius: 6px;
-    color: #c53030;
+    color: #e53e3e;
   }
   
-  .metadata-preview {
-    margin-top: 25px;
-    background-color: #f7fafc;
+  .metadata-preview, .transcoding-options, .transcoded-files, .uploaded-files {
+    margin-top: 20px;
+    padding: 16px;
+    background-color: #f9f9f9;
     border-radius: 8px;
-    padding: 20px;
   }
   
-  .metadata-preview h3 {
+  .metadata-preview h3, .transcoding-options h3, .transcoded-files h3, .uploaded-files h3 {
     margin-top: 0;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
     color: #2d3748;
+  }
+  
+  .uploaded-files h4 {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    color: #4a5568;
+    font-size: 16px;
   }
   
   .metadata-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 15px;
+    gap: 16px;
   }
   
   .metadata-item {
     background-color: white;
-    border-radius: 6px;
-    padding: 15px;
+    padding: 12px;
+    border-radius: 4px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
   
   .metadata-item h4 {
     margin-top: 0;
-    margin-bottom: 10px;
-    color: #4a5568;
-    font-size: 16px;
+    margin-bottom: 8px;
+    color: #2d3748;
   }
   
   .metadata-details {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
   }
   
   .detail {
     font-size: 14px;
+    color: #4a5568;
+  }
+  
+  .options-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .form-group label {
+    font-size: 14px;
+    color: #4a5568;
+  }
+  
+  .form-group input, .form-group select {
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background-color: white;
+  }
+  
+  .transcoding-progress, .upload-progress {
+    margin-top: 20px;
+    padding: 16px;
+    background-color: #ebf8ff;
+    border-radius: 8px;
+  }
+  
+  .progress-bar {
+    height: 10px;
+    background-color: #e2e8f0;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background-color: #4299e1;
+    transition: width 0.3s ease;
+  }
+  
+  .transcoded-list, .uploaded-list, .failed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .transcoded-item, .uploaded-item, .failed-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: white;
+    border-radius: 4px;
+    border-left: 3px solid #48bb78;
+  }
+  
+  .transcoded-item.failed, .failed-item {
+    border-left-color: #e53e3e;
+  }
+  
+  .file-path {
+    font-size: 14px;
+    color: #4a5568;
+  }
+  
+  .file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .file-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #2d3748;
+  }
+  
+  .file-album {
+    font-size: 12px;
     color: #718096;
   }
   
-  .upload-actions {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end;
+  .success-label {
+    font-size: 12px;
+    color: #48bb78;
   }
   
-  .upload-button {
-    background-color: #38a169;
-    color: white;
+  .error-label {
+    font-size: 12px;
+    color: #e53e3e;
+  }
+  
+  .upload-actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  
+  .transcode-button, .upload-button {
+    padding: 10px 20px;
     border: none;
     border-radius: 4px;
-    padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
     transition: background-color 0.3s;
   }
   
-  .upload-button:hover:not(:disabled) {
-    background-color: #2f855a;
+  .transcode-button {
+    background-color: #48bb78;
+    color: white;
   }
   
-  .upload-button:disabled {
+  .transcode-button:hover {
+    background-color: #38a169;
+  }
+  
+  .upload-button {
+    background-color: #4299e1;
+    color: white;
+  }
+  
+  .upload-button:hover {
+    background-color: #3182ce;
+  }
+  
+  .upload-button:disabled, .transcode-button:disabled {
     background-color: #a0aec0;
     cursor: not-allowed;
   }
   
   .instructions {
-    background-color: #f7fafc;
+    background-color: #f9f9f9;
+    padding: 16px;
     border-radius: 8px;
-    padding: 20px;
-    margin-top: 30px;
   }
   
   .instructions h3 {
     margin-top: 0;
     margin-bottom: 12px;
     color: #2d3748;
-    font-size: 18px;
   }
   
   .instructions ul {
     margin: 0;
     padding-left: 20px;
-    columns: 2;
   }
   
   .instructions li {

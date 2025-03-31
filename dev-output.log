@@ -1,0 +1,349 @@
+
+> music-library-manager@0.0.1 tauri
+> tauri dev
+
+     Running BeforeDevCommand (`npm run dev`)
+     Running DevCommand (`cargo  run --no-default-features --color always --`)
+        Info Watching /Users/wizziwig/Documents/PCI-catalog-manager/music-library-manager-2.0/src-tauri for changes...
+
+> music-library-manager@0.0.1 dev
+> vite dev
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `app`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:29:57[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m29[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_store_mongo_credentials<R: Runtime>(app: tauri::AppHandle<R>, credentials: MongoCredentials) -> Result<(), String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                         [0m[0m[1m[33m^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_app`[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_variables)]` on by default[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `credentials`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:29:83[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m29[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_store_mongo_credentials<R: Runtime>(app: tauri::AppHandle<R>, credentials: MongoCredentials) -> Result<(), String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                                   [0m[0m[1m[33m^^^^^^^^^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_credentials`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `app`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:36:55[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m36[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_get_mongo_credentials<R: Runtime>(app: tauri::AppHandle<R>) -> Result<MongoCredentials, String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                       [0m[0m[1m[33m^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_app`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `app`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:43:58[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m43[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_delete_mongo_credentials<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                          [0m[0m[1m[33m^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_app`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `app`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:50:54[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m50[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_store_r2_credentials<R: Runtime>(app: tauri::AppHandle<R>, credentials: R2Credentials) -> Result<(), String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                      [0m[0m[1m[33m^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_app`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `credentials`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:50:80[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m50[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_store_r2_credentials<R: Runtime>(app: tauri::AppHandle<R>, credentials: R2Credentials) -> Result<(), String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                                [0m[0m[1m[33m^^^^^^^^^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_credentials`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `app`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:57:52[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m57[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_get_r2_credentials<R: Runtime>(app: tauri::AppHandle<R>) -> Result<R2Credentials, String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                    [0m[0m[1m[33m^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_app`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `app`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:64:55[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m64[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_delete_r2_credentials<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                       [0m[0m[1m[33m^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_app`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `app`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:71:49[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m71[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_has_credentials<R: Runtime>(app: tauri::AppHandle<R>, credential_type: String) -> Result<bool, String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                 [0m[0m[1m[33m^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_app`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `credential_type`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:71:75[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m71[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_has_credentials<R: Runtime>(app: tauri::AppHandle<R>, credential_type: String) -> Result<bool, String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                           [0m[0m[1m[33m^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_credential_type`[0m
+
+[1m[33mwarning[0m[1m:[0m `app` (lib) generated 10 warnings
+[1m[32m   Compiling[0m app v0.1.0 (/Users/wizziwig/Documents/PCI-catalog-manager/music-library-manager-2.0/src-tauri)
+[1m[36m    Building[0m [=======================> ] 634/635: app(bin)                    [K[0m[1m[38;5;9merror[E0432][0m[0m[1m: unresolved import `keyring::Keyring`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:14:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m14[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse keyring::Keyring;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mno `Keyring` in the root[0m
+
+[1m[36m    Building[0m [=======================> ] 634/635: app(bin)                    [K[0m[1m[38;5;9merror[E0432][0m[0m[1m: unresolved import `tauri::HttpRequestBuilder`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:16:56[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m16[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async_runtime, command, http::Response, AppHandle, HttpRequestBuilder, Manager, State, Window,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                        [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mno `HttpRequestBuilder` in the root[0m
+
+[1m[36m    Building[0m [=======================> ] 634/635: app(bin)                    [K[0m[1m[38;5;9merror[E0432][0m[0m[1m: unresolved import `rusty_s3`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:8:5[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m8[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse rusty_s3::{Bucket, S3Action};[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^[0m[0m [0m[0m[1m[38;5;9muse of undeclared crate or module `rusty_s3`[0m
+
+[1m[36m    Building[0m [=======================> ] 634/635: app(bin)                    [K[0m[1m[38;5;9merror[E0432][0m[0m[1m: unresolved import `url`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:18:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m18[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse url::Url;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[38;5;9m^^^[0m[0m [0m[0m[1m[38;5;9muse of undeclared crate or module `url`[0m
+
+[1m[36m    Building[0m [=======================> ] 634/635: app(bin)                    [K[0m[1m[38;5;9merror[E0425][0m[0m[1m: cannot find value `KEYCHAIN_SERVICE_MONGO` in this scope[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:236:22[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m236[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m         "mongo" => (KEYCHAIN_SERVICE_MONGO, KEYCHAIN_ACCOUNT_MONGO),[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                      [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mnot found in this scope[0m
+
+[0m[1m[38;5;9merror[E0425][0m[0m[1m: cannot find value `KEYCHAIN_ACCOUNT_MONGO` in this scope[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:236:46[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m236[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m         "mongo" => (KEYCHAIN_SERVICE_MONGO, KEYCHAIN_ACCOUNT_MONGO),[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                                              [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mnot found in this scope[0m
+
+[0m[1m[38;5;9merror[E0425][0m[0m[1m: cannot find value `KEYCHAIN_SERVICE_R2` in this scope[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:237:19[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m237[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m         "r2" => (KEYCHAIN_SERVICE_R2, KEYCHAIN_ACCOUNT_R2),[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                   [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mnot found in this scope[0m
+
+[0m[1m[38;5;9merror[E0425][0m[0m[1m: cannot find value `KEYCHAIN_ACCOUNT_R2` in this scope[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:237:40[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m237[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m         "r2" => (KEYCHAIN_SERVICE_R2, KEYCHAIN_ACCOUNT_R2),[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                                        [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mnot found in this scope[0m
+
+[0m[1m[38;5;9merror[E0433][0m[0m[1m: failed to resolve: use of undeclared type `Entry`[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:244:24[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m244[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m     let entry = match Entry::new(service, account) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                        [0m[0m[1m[38;5;9m^^^^^[0m[0m [0m[0m[1m[38;5;9muse of undeclared type `Entry`[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;14mhelp[0m[0m: consider importing one of these items[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m4[0m[0m   [0m[0m[38;5;10m+ use std::collections::btree_map::Entry;[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m4[0m[0m   [0m[0m[38;5;10m+ use std::collections::btree_set::Entry;[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m4[0m[0m   [0m[0m[38;5;10m+ use std::collections::hash_map::Entry;[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m4[0m[0m   [0m[0m[38;5;10m+ use std::collections::hash_set::Entry;[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m      and 3 other candidates[0m
+
+[0m[1m[38;5;9merror[E0425][0m[0m[1m: cannot find value `KEYCHAIN_SERVICE_MONGO` in this scope[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:279:22[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m279[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m         "mongo" => (KEYCHAIN_SERVICE_MONGO, KEYCHAIN_ACCOUNT_MONGO),[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                      [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mnot found in this scope[0m
+
+[0m[1m[38;5;9merror[E0425][0m[0m[1m: cannot find value `KEYCHAIN_ACCOUNT_MONGO` in this scope[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:279:46[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m279[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m         "mongo" => (KEYCHAIN_SERVICE_MONGO, KEYCHAIN_ACCOUNT_MONGO),[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                                              [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mnot found in this scope[0m
+
+[0m[1m[38;5;9merror[E0425][0m[0m[1m: cannot find value `KEYCHAIN_SERVICE_R2` in this scope[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:280:19[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m280[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m         "r2" => (KEYCHAIN_SERVICE_R2, KEYCHAIN_ACCOUNT_R2),[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                   [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mnot found in this scope[0m
+
+[0m[1m[38;5;9merror[E0425][0m[0m[1m: cannot find value `KEYCHAIN_ACCOUNT_R2` in this scope[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:280:40[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m280[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m         "r2" => (KEYCHAIN_SERVICE_R2, KEYCHAIN_ACCOUNT_R2),[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                                        [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mnot found in this scope[0m
+
+[0m[1m[38;5;9merror[E0433][0m[0m[1m: failed to resolve: use of undeclared type `Entry`[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:284:18[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m284[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m     let entry = Entry::new(service, account)[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                  [0m[0m[1m[38;5;9m^^^^^[0m[0m [0m[0m[1m[38;5;9muse of undeclared type `Entry`[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;14mhelp[0m[0m: consider importing one of these items[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m4[0m[0m   [0m[0m[38;5;10m+ use std::collections::btree_map::Entry;[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m4[0m[0m   [0m[0m[38;5;10m+ use std::collections::btree_set::Entry;[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m4[0m[0m   [0m[0m[38;5;10m+ use std::collections::hash_map::Entry;[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m4[0m[0m   [0m[0m[38;5;10m+ use std::collections::hash_set::Entry;[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m      and 3 other candidates[0m
+
+[1m[36m    Building[0m [=======================> ] 634/635: app(bin)                    [K[0m[1m[33mwarning[0m[0m[1m: unused import: `debug`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:6:11[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m6[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse log::{debug, error, info, warn};[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m           [0m[0m[1m[33m^^^^^[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m  [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_imports)]` on by default[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `Client as MongoDbClient` and `options::ClientOptions`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:7:26[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m7[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse mongodb::{bson::doc, options::ClientOptions, Client as MongoDbClient};[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                          [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `PathBuf` and `Path`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:11:17[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m11[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse std::path::{Path, PathBuf};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                 [0m[0m[1m[33m^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `std::collections::HashMap`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:12:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m12[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse std::collections::HashMap;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `std::sync::Arc`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:13:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m13[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse std::sync::Arc;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `AppHandle`, `Window`, `async_runtime`, and `http::Response`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:16:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m16[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async_runtime, command, http::Response, AppHandle, HttpRequestBuilder, Manager, State, Window,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^[0m[0m           [0m[0m[1m[33m^^^^^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^^[0m[0m                                      [0m[0m[1m[33m^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `std::io::Read`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/audio/metadata.rs:3:5[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m3[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse std::io::Read;[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `Context` and `anyhow`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/audio/transcoding.rs:6:22[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m6[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse anyhow::{Result, anyhow, Context};[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                      [0m[0m[1m[33m^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `tempfile::TempDir`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/audio/transcoding.rs:8:5[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m8[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse tempfile::TempDir;[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `regex::Regex`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/audio/transcoding.rs:9:5[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m9[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse regex::Regex;[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `TranscodingOptions`, `TranscodingResult`, and `transcode_file`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/audio/mod.rs:5:23[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m5[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub use transcoding::{transcode_file, TranscodingOptions, TranscodingResult}; [0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                       [0m[0m[1m[33m^^^^^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `AlbumMetadata` and `TrackMetadata`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:22:46[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m22[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse audio::{extract_metadata, AudioMetadata, TrackMetadata, AlbumMetadata};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                              [0m[0m[1m[33m^^^^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^^^^^^[0m
+
+[1m[36m    Building[0m [=======================> ] 634/635: app(bin)                    [K[0m[1m[33mwarning[0m[0m[1m: unused imports: `R2Client` and `R2UploadResult`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:27:19[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m27[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse storage::r2::{R2Client, R2UploadResult};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                   [0m[0m[1m[33m^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `Album`, `DbResponse`, `MongoClient as MongoClientImpl`, and `Track`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:28:24[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m28[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse storage::mongodb::{MongoClient as MongoClientImpl, Album, Track, DbResponse};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                        [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^[0m[0m  [0m[0m[1m[33m^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `PathBuf`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:2:23[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m2[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse std::path::{Path, PathBuf};[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                       [0m[0m[1m[33m^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `std::sync::Arc`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:3:5[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m3[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse std::sync::Arc;[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `uuid::Uuid`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:6:5[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m6[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse uuid::Uuid;[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `error`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:7:17[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m7[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse log::{info, error, warn};[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                 [0m[0m[1m[33m^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `tokio::sync::Mutex`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:9:5[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m9[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse tokio::sync::Mutex;[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `std::time::Duration`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:11:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m11[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse std::time::Duration;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `tauri::async_runtime`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:12:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m12[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse tauri::async_runtime;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `AlbumMetadata` and `TrackMetadata`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:14:20[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m14[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse crate::audio::{TrackMetadata, AlbumMetadata, AudioMetadata};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                    [0m[0m[1m[33m^^^^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^^^^^^[0m
+
+[1m[36m    Building[0m [=======================> ] 634/635: app(bin)                    [K[0m[1m[33mwarning[0m[0m[1m: unused import: `TranscodingOptions`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:15:33[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m15[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse crate::audio::transcoding::{TranscodingOptions, TranscodingResult};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                 [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `R2Client`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:16:26[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m16[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse crate::storage::r2::{R2Client, R2UploadResult};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                          [0m[0m[1m[33m^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `DbResponse` and `MongoClient as MongoClientImpl`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:17:31[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m17[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse crate::storage::mongodb::{MongoClient as MongoClientImpl, Album, Track, DbResponse};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                               [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m                [0m[0m[1m[33m^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `BulkUploadResponse`, `FailedTrackInfo`, `UploadPathConfig`, and `UploadedTrackInfo`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:32:40[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m32[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse upload::{upload_transcoded_tracks, BulkUploadResponse, UploadedTrackInfo, FailedTrackInfo, UploadPathConfig};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                        [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^^^^^^^^^[0m
+
+[1m[36m    Building[0m [=======================> ] 634/635: app(bin)                    ✔ [paraglide-js] Compilation complete (locale-modules)
+error when starting dev server:
+Error: Port 5173 is already in use
+    at Server.onError (file:///Users/wizziwig/Documents/PCI-catalog-manager/music-library-manager-2.0/node_modules/vite/dist/node/chunks/dep-DDxXL6bt.js:30664:18)
+    at Server.emit (node:events:507:28)
+    at emitErrorNT (node:net:1975:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+       Error The "beforeDevCommand" terminated with a non-zero status code.

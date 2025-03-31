@@ -30,20 +30,25 @@ tokio = { version = "1.35.1", features = ["full", "sync"] }
 futures-util = "0.3.29"
 futures = "0.3.29"
 parking_lot = "0.12.1"
-aws-config = "1.1.1"
-aws-sdk-s3 = "1.12.0"
-aws-smithy-types = "1.1.1"
+aws-config = "1.0.1"
+aws-sdk-s3 = "1.0.0"
+aws-smithy-types = "1.0.1"
+aws-smithy-http-client = "1.0.1"
 bytes = "1.5.0"
 http = "0.2.9"
 anyhow = "1.0.75"
 thiserror = "1.0.50"
 dirs = "5.0"
-keyring = { version = "3.6.2", features = ["apple-native"] }
+keyring = "3.6.2"
+url = "2.5.0"
 security-framework = "3.2.0"
+objc2-foundation = "0.2.0"
 symphonia = { version = "0.5.3", features = ["mp3", "aac", "isomp4", "wav", "flac", "ogg", "alac"] }
 id3 = "1.10.0"
 uuid = { version = "1.6.1", features = ["v4", "serde"] }
 mime_guess = "2.0.4"
 chrono = { version = "0.4.31", features = ["serde"] }
+tempfile = "3.10.0"
+regex = "1.10.4"
 
 [features]

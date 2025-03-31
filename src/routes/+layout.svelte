@@ -6,6 +6,7 @@
 	onMount(async () => {
 		console.log('Layout mounted, attempting to initialize R2 client...');
 		try {
+			// Try to initialize client with existing credentials
 			const success = await invoke<boolean>('init_r2_client');
 			if (success) {
 				console.log('R2 client initialized successfully.');
@@ -13,7 +14,12 @@
 				console.warn('init_r2_client command returned false.');
 			}
 		} catch (error) {
-			console.error('Failed to initialize R2 client:', error);
+			// Only show error if it's not just missing credentials
+			if (typeof error === 'string' && !error.includes('not set')) {
+				console.error('Failed to initialize R2 client:', error);
+			} else {
+				console.log('R2 credentials not configured yet. Navigate to Settings to set up credentials.');
+			}
 		}
 	});
 </script>
