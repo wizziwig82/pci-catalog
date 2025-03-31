@@ -7,23 +7,23 @@ This to-do list outlines the steps to build a music management app, covering set
 
 - [x] Install Rust, Tauri, and Svelte on the development machine.
 - [x] Create a new Tauri project using Svelte as the frontend framework.
-- [ ] Set up version control (e.g., Git) and initialize a repository.
+- [x] Set up version control (e.g., Git) and initialize a repository.
 
 ### 1.2 Configure Cloudflare R2 and MongoDB
 
 - [ ] Create a Cloudflare R2 bucket and obtain access keys.
-- [ ] Set up a MongoDB database with collections for Albums and Tracks.
-- [ ] Define the schema for Albums (e.g., name, art_path, album_id) and Tracks (e.g., title, album_id, metadata fields).
-- [ ] Write tests for R2 connection (upload/download test file) (in tests/unit/backend/storage).
-- [ ] Write tests for MongoDB connection and CRUD operations (in tests/unit/backend/storage).
+- [x] Set up a MongoDB database with collections for Albums and Tracks.
+- [x] Define the schema for Albums (e.g., name, art_path, album_id) and Tracks (e.g., title, album_id, metadata fields).
+- [x] Write tests for R2 connection (upload/download test file) (in tests/unit/backend/storage).
+- [x] Write tests for MongoDB connection and CRUD operations (in tests/unit/backend/storage).
 
 ### 1.3 Implement Credential Configuration
 
-- [ ] Create a settings page in Svelte for entering R2 and MongoDB credentials.
-- [ ] Use Tauri to securely store credentials in the macOS keychain (or equivalent for other platforms).
-- [ ] Implement validation to test connections to R2 and MongoDB.
-- [ ] Write tests for credential storage and retrieval (in tests/integration/credential-management).
-- [ ] Write tests for connection validation with both valid and invalid credentials (in tests/integration/credential-management).
+- [x] Create a settings page in Svelte for entering R2 and MongoDB credentials.
+- [x] Use Tauri to securely store credentials in the macOS keychain (or equivalent for other platforms).
+- [x] Implement validation to test connections to R2 and MongoDB.
+- [x] Write tests for credential storage and retrieval (in tests/integration/credential-management).
+- [x] Write tests for connection validation with both valid and invalid credentials (in tests/integration/credential-management).
 
 ### 1.4 Develop Bulk Upload Functionality
 

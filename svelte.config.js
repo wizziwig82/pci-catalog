@@ -3,7 +3,10 @@ import adapter from '@sveltejs/adapter-auto';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const config = {
-	preprocess: [vitePreprocess(), mdsvex()],
+	preprocess: [
+		vitePreprocess(),
+		// mdsvex() // Temporarily comment out mdsvex
+	],
 	kit: { adapter: adapter() },
 	extensions: ['.svelte', '.svx']
 };
