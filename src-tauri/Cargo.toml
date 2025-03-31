@@ -37,3 +37,7 @@ http = "0.2.9"
 anyhow = "1.0.75"
 thiserror = "1.0.50"
 dirs = "5.0"
+keyring = { version = "3.6.2", features = ["apple-native"] }
+security-framework = "3.2.0"
+
+[features]
