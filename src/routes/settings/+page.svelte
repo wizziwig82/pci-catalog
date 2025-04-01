@@ -11,8 +11,10 @@
 
   // R2 variables
   let r2AccountId = '';
+  let r2BucketName = '';
   let r2AccessKeyId = '';
   let r2SecretAccessKey = '';
+  let r2Endpoint = '';
   let r2Connected = false;
   let r2ConnectionError = '';
   let r2Loading = false;
@@ -45,8 +47,10 @@
       const credentials = await invoke<any>('get_r2_credentials');
       if (credentials) {
         r2AccountId = credentials.account_id;
+        r2BucketName = credentials.bucket_name;
         r2AccessKeyId = credentials.access_key_id;
         r2SecretAccessKey = credentials.secret_access_key;
+        r2Endpoint = credentials.endpoint || '';
         r2Connected = true; // Assume connected if loaded, test separately if needed
       }
     } catch (error) {
@@ -97,8 +101,10 @@
       // @ts-ignore - Tauri API typings not working correctly
       await invoke('store_r2_credentials', {
         accountId: r2AccountId,
+        bucketName: r2BucketName,
         accessKeyId: r2AccessKeyId,
-        secretAccessKey: r2SecretAccessKey
+        secretAccessKey: r2SecretAccessKey,
+        endpoint: r2Endpoint
       });
       
       // Initialize the R2 client
@@ -122,16 +128,25 @@
   }
 
   async function testMongoConnection() {
-    // Test function remains largely the same, backend handles the logic
+    mongoLoading = true;
+    mongoConnectionError = '';
+    
     try {
-      mongoLoading = true;
-      mongoConnectionError = '';
+      console.log('Testing MongoDB connection...');
+      // First, try initializing the client if it's not already initialized
+      try {
+        console.log('Initializing MongoDB client...');
+        const initResult = await invoke('init_mongo_client');
+        console.log('MongoDB client initialization result:', initResult);
+      } catch (initError) {
+        console.error('Error initializing MongoDB client:', initError);
+      }
       
-      // Test the MongoDB connection
-      // @ts-ignore - Tauri API typings not working correctly
-      const success = await invoke('test_mongo_connection');
+      // Now test the connection
+      const result = await invoke('test_mongo_connection');
+      console.log('MongoDB connection test result:', result);
       
-      if (success) {
+      if (result) {
         mongoConnected = true;
         mongoConnectionError = 'Connection successful!';
       } else {
@@ -140,8 +155,8 @@
       }
     } catch (error: any) {
       mongoConnected = false;
-      mongoConnectionError = `Error testing MongoDB connection: ${typeof error === 'string' ? error : JSON.stringify(error)}`;
       console.error('MongoDB connection test error:', error);
+      mongoConnectionError = `Error testing MongoDB connection: ${typeof error === 'string' ? error : JSON.stringify(error)}`;
     } finally {
       mongoLoading = false;
     }
@@ -190,8 +205,10 @@
       // @ts-ignore - Tauri API typings not working correctly
       await invoke('delete_credentials', { credential_type: 'r2' });
       r2AccountId = '';
+      r2BucketName = '';
       r2AccessKeyId = '';
       r2SecretAccessKey = '';
+      r2Endpoint = '';
       r2Connected = false;
     } catch (error) {
       console.error('Error deleting R2 credentials:', error);
@@ -263,6 +280,11 @@
       </div>
       
       <div class="mb-2">
+        <label for="r2BucketName" class="block text-sm font-medium mb-1">Bucket Name</label>
+        <input type="text" id="r2BucketName" bind:value={r2BucketName} class="w-full p-2 border rounded" />
+      </div>
+      
+      <div class="mb-2">
         <label for="r2AccessKeyId" class="block text-sm font-medium mb-1">Access Key ID</label>
         <input type="text" id="r2AccessKeyId" bind:value={r2AccessKeyId} class="w-full p-2 border rounded" />
       </div>
@@ -272,10 +294,17 @@
         <input type="password" id="r2SecretAccessKey" bind:value={r2SecretAccessKey} class="w-full p-2 border rounded" />
       </div>
       
+      <div class="mb-2">
+        <label for="r2Endpoint" class="block text-sm font-medium mb-1">Endpoint</label>
+        <input type="text" id="r2Endpoint" bind:value={r2Endpoint} class="w-full p-2 border rounded" 
+          placeholder="https://your-account-id.r2.cloudflarestorage.com" />
+        <p class="text-xs text-gray-500 mt-1">Format: https://your-account-id.r2.cloudflarestorage.com</p>
+      </div>
+      
       <div class="flex space-x-2 mb-2">
         <button 
           on:click={initR2Client} 
-          disabled={r2Loading || (!r2AccountId || !r2AccessKeyId || !r2SecretAccessKey)}
+          disabled={r2Loading || (!r2AccountId || !r2BucketName || !r2AccessKeyId || !r2SecretAccessKey || !r2Endpoint)}
           class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
         >
           {r2Loading ? 'Saving & Connecting...' : 'Save & Connect'}

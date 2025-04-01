@@ -10,6 +10,7 @@ use tokio::sync::Mutex;
 use std::string::ToString;
 use std::time::Duration;
 use tauri::async_runtime;
+use mime_guess;
 
 use crate::audio::{TrackMetadata, AlbumMetadata, AudioMetadata};
 use crate::audio::transcoding::{TranscodingOptions, TranscodingResult};
@@ -48,6 +49,7 @@ pub struct FailedTrackInfo {
 pub struct UploadPathConfig {
     pub original_prefix: String,
     pub medium_prefix: String,
+    pub album_art_prefix: String,
 }
 
 impl Default for UploadPathConfig {
@@ -55,6 +57,7 @@ impl Default for UploadPathConfig {
         Self {
             original_prefix: "tracks/original".to_string(),
             medium_prefix: "tracks/medium".to_string(),
+            album_art_prefix: "albums/artwork".to_string(),
         }
     }
 }
@@ -65,6 +68,8 @@ async fn upload_track_to_r2(
     file_path: &str,
     r2_path: &str,
     mime_type: &str,
+    bucket_name: &str,
+    make_public: bool,
 ) -> Result<R2UploadResult, String> {
     info!("Uploading file {} to R2 at path {}", file_path, r2_path);
     
@@ -74,16 +79,24 @@ async fn upload_track_to_r2(
         Err(e) => return Err(format!("Failed to read file {}: {}", file_path, e)),
     };
     
-    // Upload the file to R2
-    let bucket_name = "music-library-manager";
-    let result = r2_client
+    // Create the put_object request
+    let mut put_request = r2_client
         .put_object()
         .bucket(bucket_name)
         .key(r2_path)
         .body(file_data.into())
-        .content_type(mime_type)
-        .send()
-        .await;
+        .content_type(mime_type);
+    
+    // Set ACL if needed (Note: R2 might not fully support all S3 ACL options)
+    // Uncomment this if your R2 setup supports ACL
+    /*
+    if make_public {
+        put_request = put_request.acl("public-read");
+    }
+    */
+    
+    // Upload the file to R2
+    let result = put_request.send().await;
     
     match result {
         Ok(_) => Ok(R2UploadResult {
@@ -202,6 +215,7 @@ async fn process_track_upload(
     transcoding_result: &TranscodingResult,
     audio_metadata: &AudioMetadata,
     path_config: &UploadPathConfig,
+    bucket_name: &str,
 ) -> Result<UploadedTrackInfo, String> {
     let file_name = Path::new(&transcoding_result.input_path)
         .file_name()
@@ -227,6 +241,8 @@ async fn process_track_upload(
         &transcoding_result.input_path,
         &original_r2_path,
         &original_mime_type,
+        bucket_name,
+        true, // Make original files public so they can be streamed
     ).await?;
     
     if !original_upload_result.success {
@@ -258,16 +274,19 @@ async fn process_track_upload(
             medium_path,
             &medium_r2_path,
             &medium_mime_type,
+            bucket_name,
+            false,
         ).await?;
         
         if !medium_upload_result.success {
             warn!("Failed to upload medium quality file: {}", 
                 medium_upload_result.error.unwrap_or_else(|| "Unknown error".to_string()));
-            // Continue even if medium quality upload fails
+            // Continue even if medium quality upload fails but log the warning
             None
         } else {
             // Store medium path
             r2_paths.insert("medium".to_string(), medium_r2_path.clone());
+            info!("Successfully uploaded medium quality file to {}", medium_r2_path);
             Some(medium_r2_path)
         }
     } else {
@@ -281,6 +300,7 @@ async fn process_track_upload(
         r2_paths,
     ).await?;
     
+    // Return information about the uploaded track
     Ok(UploadedTrackInfo {
         track_id,
         title: audio_metadata.track.title.clone(),
@@ -318,6 +338,16 @@ pub async fn upload_transcoded_tracks(
     // Use default path config if not provided
     let path_config = path_config.unwrap_or_default();
     
+    // Get R2 credentials to find the bucket name
+    let credentials = match crate::get_r2_credentials().await {
+        Ok(creds) => creds,
+        Err(e) => return Err(format!("Failed to get R2 credentials: {}", e)),
+    };
+    
+    // Get bucket name from credentials
+    let bucket_name = credentials.bucket_name;
+    info!("Using R2 bucket: {}", bucket_name);
+    
     // Process each track
     let mut uploaded_tracks = Vec::new();
     let mut failed_tracks = Vec::new();
@@ -331,6 +361,7 @@ pub async fn upload_transcoded_tracks(
             transcoding_result,
             audio_metadata,
             &path_config,
+            &bucket_name,
         ).await {
             Ok(track_info) => {
                 uploaded_tracks.push(track_info);
@@ -356,4 +387,59 @@ pub async fn upload_transcoded_tracks(
         uploaded_tracks,
         failed_tracks,
     })
+}
+
+/// Upload album artwork to R2
+#[command]
+pub async fn upload_album_artwork(
+    r2_state: State<'_, crate::R2State>,
+    album_id: String,
+    image_path: String,
+    path_config: Option<UploadPathConfig>,
+) -> Result<R2UploadResult, String> {
+    // Get R2 client
+    let r2_client_lock = r2_state.client.lock().await;
+    let r2_client = r2_client_lock.as_ref()
+        .ok_or("R2 client not initialized. Please configure R2 credentials first.")?;
+    
+    // Get R2 credentials to find the bucket name
+    let credentials = match crate::get_r2_credentials().await {
+        Ok(creds) => creds,
+        Err(e) => return Err(format!("Failed to get R2 credentials: {}", e)),
+    };
+    
+    // Use default path config if not provided
+    let path_config = path_config.unwrap_or_default();
+    
+    // Determine MIME type based on file extension
+    let image_mime_type = mime_guess::from_path(&image_path)
+        .first_or_octet_stream()
+        .to_string();
+    
+    // Create artwork path in R2
+    // Format is: albums/artwork/{album_id}.{ext}
+    let file_extension = Path::new(&image_path)
+        .extension()
+        .map(|ext| ext.to_string_lossy().to_string())
+        .unwrap_or_else(|| "jpg".to_string());
+    
+    let r2_path = format!("{}/{}.{}", 
+        path_config.album_art_prefix, 
+        album_id, 
+        file_extension);
+    
+    info!("Uploading album artwork for {} to {}", album_id, r2_path);
+    
+    // Upload the artwork to R2
+    let upload_result = upload_track_to_r2(
+        r2_client,
+        &image_path,
+        &r2_path,
+        &image_mime_type,
+        &credentials.bucket_name,
+        true, // Make artwork public for web access
+    ).await?;
+    
+    // Return the upload result
+    Ok(upload_result)
 } 

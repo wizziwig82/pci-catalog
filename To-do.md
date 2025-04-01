@@ -30,11 +30,11 @@ This to-do list outlines the steps to build a music management app, covering set
 - [x] Create a UI component in Svelte for selecting multiple music files.
 - [x] Implement file reading and metadata extraction (e.g., using a library like audio-metadata).
 - [x] Set up transcoding with ffmpeg to generate medium quality and original versions of each track.
-- [ ] Upload transcoded files to R2 with organized paths (e.g., /tracks/{quality}/{filename}).
-- [ ] Store metadata in MongoDB, linking tracks to albums via album_id.
-- [ ] Write unit tests for metadata extraction (in tests/unit/backend/metadata).
-- [ ] Write unit tests for transcoding functionality (in tests/unit/backend/transcoding).
-- [ ] Write integration tests for the upload workflow (in tests/integration/upload-workflow).
+- [x] Upload transcoded files to R2 with organized paths (e.g., /tracks/{quality}/{filename}).
+- [x] Store metadata in MongoDB, linking tracks to albums via album_id.
+- [x] Write unit tests for metadata extraction (in tests/unit/backend/metadata).
+- [x] Write unit tests for transcoding functionality (in tests/unit/backend/transcoding).
+- [x] Write integration tests for the upload workflow (in tests/integration/upload-workflow).
 
 ### 1.5 Handle Album Creation
 

@@ -26,6 +26,10 @@ const KEYCHAIN_ACCOUNT_MONGO: &str = "mongo_credentials";
 const KEYCHAIN_SERVICE_R2: &str = "com.musiclibrarymanager.r2";
 const KEYCHAIN_ACCOUNT_R2: &str = "r2_credentials";
 
+// Dev-mode fallback config file path for credentials (only used if keychain fails)
+#[cfg(debug_assertions)]
+const DEV_CREDENTIALS_FILE: &str = "dev_credentials.json";
+
 // Import audio module
 mod audio;
 use audio::{extract_metadata, AudioMetadata};
@@ -41,6 +45,7 @@ mod storage;
 // Import the upload module and its functions
 mod upload;
 use upload::upload_transcoded_tracks;
+use upload::upload_album_artwork;
 // use upload::{BulkUploadResponse, UploadedTrackInfo, FailedTrackInfo, UploadPathConfig};
 
 /// MongoDB client state
@@ -51,6 +56,59 @@ pub struct MongoState {
 /// R2 client state
 pub struct R2State {
     client: Mutex<Option<aws_sdk_s3::Client>>,
+}
+
+// Development credentials storage structure
+#[cfg(debug_assertions)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+struct DevCredentials {
+    mongo_connection_string: Option<String>,
+    r2_credentials: Option<R2Credentials>,
+}
+
+// Development-mode fallback for credential storage/retrieval
+#[cfg(debug_assertions)]
+async fn load_dev_credentials() -> DevCredentials {
+    let path = PathBuf::from(DEV_CREDENTIALS_FILE);
+    if path.exists() {
+        match fs::read_to_string(&path) {
+            Ok(json_str) => {
+                match serde_json::from_str::<DevCredentials>(&json_str) {
+                    Ok(creds) => {
+                        info!("Loaded development credentials from file");
+                        return creds;
+                    },
+                    Err(e) => {
+                        warn!("Failed to parse development credentials file: {}", e);
+                    }
+                }
+            },
+            Err(e) => {
+                warn!("Failed to read development credentials file: {}", e);
+            }
+        }
+    }
+    
+    DevCredentials::default()
+}
+
+#[cfg(debug_assertions)]
+async fn save_dev_credentials(creds: &DevCredentials) -> Result<(), String> {
+    let json_str = match serde_json::to_string_pretty(creds) {
+        Ok(s) => s,
+        Err(e) => return Err(format!("Failed to serialize development credentials: {}", e)),
+    };
+    
+    match fs::write(DEV_CREDENTIALS_FILE, json_str) {
+        Ok(_) => {
+            info!("Saved development credentials to file");
+            Ok(())
+        },
+        Err(e) => {
+            warn!("Failed to write development credentials file: {}", e);
+            Err(format!("Failed to write development credentials file: {}", e))
+        }
+    }
 }
 
 /// MongoDB credentials structure (keep for type hint, though we only store the connection string now)
@@ -66,34 +124,53 @@ pub struct MongoCredentials {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct R2Credentials {
     pub account_id: String,
+    pub bucket_name: String,
     pub access_key_id: String,
     pub secret_access_key: String,
+    pub endpoint: String,
 }
 
 /// Stores R2 credentials in Keychain using keyring
 #[command]
 async fn store_r2_credentials(
     account_id: String,
+    bucket_name: String,
     access_key_id: String,
     secret_access_key: String,
+    endpoint: String,
 ) -> Result<bool, String> {
     // Log that we're storing R2 credentials
     info!("Storing R2 credentials in keychain");
+    
+    // Create the credentials struct
+    let creds = R2Credentials {
+        account_id,
+        bucket_name,
+        access_key_id,
+        secret_access_key,
+        endpoint,
+    };
     
     // Create the keyring entry
     let entry = match Entry::new(KEYCHAIN_SERVICE_R2, KEYCHAIN_ACCOUNT_R2) {
         Ok(entry) => entry,
         Err(e) => {
             error!("Failed to create keyring entry for R2 credentials: {}", e);
+            
+            // In debug mode, fall back to file storage
+            #[cfg(debug_assertions)]
+            {
+                info!("Using development fallback for storing R2 credentials");
+                let mut dev_creds = load_dev_credentials().await;
+                dev_creds.r2_credentials = Some(creds);
+                match save_dev_credentials(&dev_creds).await {
+                    Ok(_) => return Ok(true),
+                    Err(e) => return Err(format!("Failed to store R2 credentials in dev fallback: {}", e)),
+                }
+            }
+            
             return Err(format!("Failed to access keychain: {}", e));
         }
-    };
-    
-    // Create the credentials struct
-    let creds = R2Credentials {
-        account_id,
-        access_key_id,
-        secret_access_key,
     };
     
     // Serialize the credentials to a JSON string
@@ -112,10 +189,32 @@ async fn store_r2_credentials(
     match entry.set_password(&json_str) {
         Ok(_) => {
             info!("Successfully stored R2 credentials");
+            
+            // In debug mode, also save to file as a backup
+            #[cfg(debug_assertions)]
+            {
+                let mut dev_creds = load_dev_credentials().await;
+                dev_creds.r2_credentials = Some(creds);
+                let _ = save_dev_credentials(&dev_creds).await;
+            }
+            
             Ok(true)
         },
         Err(e) => {
             error!("Failed to store R2 credentials in keychain: {}", e);
+            
+            // In debug mode, fall back to file storage
+            #[cfg(debug_assertions)]
+            {
+                info!("Using development fallback for storing R2 credentials after keychain failure");
+                let mut dev_creds = load_dev_credentials().await;
+                dev_creds.r2_credentials = Some(creds);
+                match save_dev_credentials(&dev_creds).await {
+                    Ok(_) => return Ok(true),
+                    Err(e) => return Err(format!("Failed to store R2 credentials in dev fallback: {}", e)),
+                }
+            }
+            
             Err(format!("Failed to store R2 credentials: {}", e))
         }
     }
@@ -131,6 +230,17 @@ async fn get_r2_credentials() -> Result<R2Credentials, String> {
         Ok(entry) => entry,
         Err(e) => {
             error!("Failed to create keyring entry for R2 credentials: {}", e);
+            
+            // In debug mode, try to get from file storage
+            #[cfg(debug_assertions)]
+            {
+                info!("Using development fallback for retrieving R2 credentials");
+                let dev_creds = load_dev_credentials().await;
+                if let Some(creds) = dev_creds.r2_credentials {
+                    return Ok(creds);
+                }
+            }
+            
             return Err(format!("Failed to access keychain: {}", e));
         }
     };
@@ -160,10 +270,32 @@ async fn get_r2_credentials() -> Result<R2Credentials, String> {
             if e.to_string().to_lowercase().contains("not found") ||
                e.to_string().to_lowercase().contains("no item") {
                 info!("R2 credentials not found in keychain");
+                
+                // In debug mode, try to get from file storage
+                #[cfg(debug_assertions)]
+                {
+                    info!("Using development fallback for retrieving R2 credentials");
+                    let dev_creds = load_dev_credentials().await;
+                    if let Some(creds) = dev_creds.r2_credentials {
+                        return Ok(creds);
+                    }
+                }
+                
                 return Err("R2 credentials not found".to_string());
             }
             
             error!("Failed to get R2 credentials from keychain: {}", e);
+            
+            // In debug mode, try to get from file storage
+            #[cfg(debug_assertions)]
+            {
+                info!("Using development fallback for retrieving R2 credentials after keychain error");
+                let dev_creds = load_dev_credentials().await;
+                if let Some(creds) = dev_creds.r2_credentials {
+                    return Ok(creds);
+                }
+            }
+            
             Err(format!("Failed to get R2 credentials: {}", e))
         }
     }
@@ -182,6 +314,19 @@ async fn store_mongo_credentials(
         Ok(entry) => entry,
         Err(e) => {
             error!("Failed to create keyring entry for MongoDB credentials: {}", e);
+            
+            // In debug mode, fall back to file storage
+            #[cfg(debug_assertions)]
+            {
+                info!("Using development fallback for storing MongoDB credentials");
+                let mut dev_creds = load_dev_credentials().await;
+                dev_creds.mongo_connection_string = Some(connection_string.clone());
+                match save_dev_credentials(&dev_creds).await {
+                    Ok(_) => return Ok(true),
+                    Err(e) => return Err(format!("Failed to store MongoDB credentials in dev fallback: {}", e)),
+                }
+            }
+            
             return Err(format!("Failed to access keychain: {}", e));
         }
     };
@@ -193,10 +338,32 @@ async fn store_mongo_credentials(
     match entry.set_password(&connection_string) {
         Ok(_) => {
             info!("Successfully stored MongoDB credentials");
+            
+            // In debug mode, also save to file as a backup
+            #[cfg(debug_assertions)]
+            {
+                let mut dev_creds = load_dev_credentials().await;
+                dev_creds.mongo_connection_string = Some(connection_string);
+                let _ = save_dev_credentials(&dev_creds).await;
+            }
+            
             Ok(true)
         },
         Err(e) => {
             error!("Failed to store MongoDB credentials in keychain: {}", e);
+            
+            // In debug mode, fall back to file storage
+            #[cfg(debug_assertions)]
+            {
+                info!("Using development fallback for storing MongoDB credentials after keychain failure");
+                let mut dev_creds = load_dev_credentials().await;
+                dev_creds.mongo_connection_string = Some(connection_string);
+                match save_dev_credentials(&dev_creds).await {
+                    Ok(_) => return Ok(true),
+                    Err(e) => return Err(format!("Failed to store MongoDB credentials in dev fallback: {}", e)),
+                }
+            }
+            
             Err(format!("Failed to store MongoDB credentials: {}", e))
         }
     }
@@ -212,6 +379,17 @@ async fn get_mongo_credentials() -> Result<String, String> {
         Ok(entry) => entry,
         Err(e) => {
             error!("Failed to create keyring entry for MongoDB credentials: {}", e);
+            
+            // In debug mode, try to get from file storage
+            #[cfg(debug_assertions)]
+            {
+                info!("Using development fallback for retrieving MongoDB credentials");
+                let dev_creds = load_dev_credentials().await;
+                if let Some(conn_string) = dev_creds.mongo_connection_string {
+                    return Ok(conn_string);
+                }
+            }
+            
             return Err(format!("Failed to access keychain: {}", e));
         }
     };
@@ -232,10 +410,32 @@ async fn get_mongo_credentials() -> Result<String, String> {
             if e.to_string().to_lowercase().contains("not found") ||
                e.to_string().to_lowercase().contains("no item") {
                 info!("MongoDB credentials not found in keychain");
+                
+                // In debug mode, try to get from file storage
+                #[cfg(debug_assertions)]
+                {
+                    info!("Using development fallback for retrieving MongoDB credentials");
+                    let dev_creds = load_dev_credentials().await;
+                    if let Some(conn_string) = dev_creds.mongo_connection_string {
+                        return Ok(conn_string);
+                    }
+                }
+                
                 return Err("MongoDB credentials not found".to_string());
             }
             
             error!("Failed to get MongoDB credentials from keychain: {}", e);
+            
+            // In debug mode, try to get from file storage
+            #[cfg(debug_assertions)]
+            {
+                info!("Using development fallback for retrieving MongoDB credentials after keychain error");
+                let dev_creds = load_dev_credentials().await;
+                if let Some(conn_string) = dev_creds.mongo_connection_string {
+                    return Ok(conn_string);
+                }
+            }
+            
             Err(format!("Failed to get MongoDB credentials: {}", e))
         }
     }
@@ -335,17 +535,24 @@ async fn init_r2_client(
     
     let credentials = credentials_result.unwrap();
     
-    info!("Creating new R2 client with account ID: {}", credentials.account_id);
+    info!("Creating new R2 client with account ID: {} and access key: {}", 
+        credentials.account_id, credentials.access_key_id);
+    
+    // Determine the endpoint - use the provided endpoint if available,
+    // otherwise construct it from account_id
+    let endpoint = if !credentials.endpoint.is_empty() {
+        credentials.endpoint.clone()
+    } else {
+        format!("https://{}.r2.cloudflarestorage.com", credentials.account_id)
+    };
+    
     let config = aws_config::defaults(aws_config::BehaviorVersion::latest())
         .region(aws_sdk_s3::config::Region::new("auto"))
-        .endpoint_url(format!(
-            "https://{}.r2.cloudflarestorage.com",
-            credentials.account_id
-        ))
+        .endpoint_url(&endpoint)
         .credentials_provider(
             aws_sdk_s3::config::Credentials::new(
-                credentials.access_key_id,
-                credentials.secret_access_key,
+                &credentials.access_key_id,
+                &credentials.secret_access_key,
                 None, None, "r2-credentials"
             )
         )
@@ -387,23 +594,77 @@ async fn init_mongo_client(mongo_state: State<'_, MongoState>) -> Result<bool, S
     
     // Get connection string from keychain
     let connection_string = match get_mongo_credentials().await {
-        Ok(connection_string) => connection_string,
+        Ok(connection_string) => {
+            // Log a masked version of the connection string for debugging
+            let masked_string = if connection_string.len() > 20 {
+                format!("{}...{}", &connection_string[0..10], &connection_string[connection_string.len() - 10..])
+            } else {
+                "too short to mask".to_string()
+            };
+            info!("Retrieved MongoDB connection string (masked): {}", masked_string);
+            
+            // Validate connection string format
+            if !connection_string.starts_with("mongodb://") && !connection_string.starts_with("mongodb+srv://") {
+                let error_msg = "Invalid MongoDB connection string format. Must start with 'mongodb://' or 'mongodb+srv://'";
+                error!("{}", error_msg);
+                return Err(error_msg.to_string());
+            }
+            
+            // Check for any line breaks or invalid characters that could cause connection issues
+            if connection_string.contains('\n') || connection_string.contains('\r') {
+                let error_msg = "MongoDB connection string contains line breaks which may cause connection issues";
+                error!("{}", error_msg);
+                return Err(error_msg.to_string());
+            }
+            
+            connection_string
+        },
         Err(e) => {
+            error!("Failed to get MongoDB connection string: {}", e);
             return Err(format!("MongoDB credentials not set: {}", e));
         }
     };
     
-    // Create MongoDB client
-    match mongodb::Client::with_uri_str(&connection_string).await {
+    // Create MongoDB client options with proper timeout settings
+    info!("Setting up MongoDB client options");
+    let mut client_options = match mongodb::options::ClientOptions::parse(&connection_string).await {
+        Ok(options) => {
+            info!("Successfully parsed MongoDB connection string");
+            options
+        },
+        Err(e) => {
+            error!("Failed to parse MongoDB connection string: {}", e);
+            return Err(format!("Failed to parse MongoDB connection string: {}", e));
+        }
+    };
+    
+    // Set timeout options
+    client_options.connect_timeout = Some(std::time::Duration::from_secs(10));
+    client_options.server_selection_timeout = Some(std::time::Duration::from_secs(10));
+    
+    // Create MongoDB client with options
+    info!("Creating MongoDB client with timeout options");
+    match mongodb::Client::with_options(client_options) {
         Ok(client) => {
-            // Store the client in state
-            let mut state_client = mongo_state.client.lock().await;
-            *state_client = Some(client);
-            info!("MongoDB client initialized successfully");
-            Ok(true)
+            // Try a quick ping to verify the connection works
+            info!("MongoDB client created, testing with ping");
+            match client.database("admin").run_command(mongodb::bson::doc! {"ping": 1}, None).await {
+                Ok(_) => {
+                    info!("MongoDB ping successful");
+                    // Store the client in state
+                    let mut state_client = mongo_state.client.lock().await;
+                    *state_client = Some(client);
+                    info!("MongoDB client initialized successfully");
+                    Ok(true)
+                },
+                Err(e) => {
+                    error!("MongoDB ping failed: {}", e);
+                    Err(format!("MongoDB connection succeeded but ping failed: {}", e))
+                }
+            }
         }
         Err(e) => {
-            error!("Failed to create MongoDB client: {}", e);
+            error!("Failed to create MongoDB client with specific error: {}", e);
             Err(format!("Failed to create MongoDB client: {}", e))
         }
     }
@@ -434,9 +695,40 @@ async fn test_r2_connection(
     let lock = r2_state.client.lock().await;
     match &*lock {
         Some(client) => {
+            // First test general credentials by listing buckets
             match client.list_buckets().send().await {
-                Ok(_) => Ok(true),
-                Err(e) => Err(format!("R2 connection test failed: {}", e)),
+                Ok(_) => {
+                    // Next, test specifically accessing the configured bucket by listing objects
+                    // Get the credentials to find the bucket name
+                    match get_r2_credentials().await {
+                        Ok(creds) => {
+                            match client.list_objects_v2()
+                                .bucket(&creds.bucket_name)
+                                .max_keys(1)
+                                .send()
+                                .await {
+                                    Ok(_) => {
+                                        info!("Successfully connected to R2 and accessed bucket: {}", creds.bucket_name);
+                                        Ok(true)
+                                    },
+                                    Err(e) => {
+                                        error!("R2 bucket access test failed: {}", e);
+                                        Err(format!("R2 credentials are valid but couldn't access bucket '{}': {}", 
+                                            creds.bucket_name, e))
+                                    }
+                                }
+                        },
+                        Err(e) => {
+                            // If we can't get credentials but can list buckets, something is odd
+                            warn!("Could list R2 buckets but couldn't retrieve bucket name: {}", e);
+                            Ok(true) // Return true since we could at least connect
+                        }
+                    }
+                },
+                Err(e) => {
+                    error!("R2 connection test failed: {}", e);
+                    Err(format!("R2 connection test failed: {}", e))
+                }
             }
         }
         None => Err("R2 client not initialized".to_string()),
@@ -718,6 +1010,88 @@ async fn transcode_audio_batch(
     Ok(results)
 }
 
+/// Get MongoDB client state for debugging
+#[command]
+async fn debug_mongo_state(mongo_state: State<'_, MongoState>) -> Result<String, String> {
+    let client_lock = mongo_state.client.lock().await;
+    
+    let has_client = client_lock.is_some();
+    info!("debug_mongo_state: MongoDB client is initialized: {}", has_client);
+    
+    match get_mongo_credentials().await {
+        Ok(conn_string) => {
+            // Mask credentials for logging
+            let masked = if conn_string.len() > 20 {
+                format!("{}...{}", &conn_string[0..10], &conn_string[conn_string.len()-10..])
+            } else {
+                "too short to mask".to_string()
+            };
+            info!("debug_mongo_state: MongoDB credentials found, masked: {}", masked);
+            
+            if has_client {
+                Ok(format!("MongoDB client is initialized and credentials are available"))
+            } else {
+                Ok(format!("MongoDB client is NOT initialized but credentials are available"))
+            }
+        },
+        Err(e) => {
+            error!("debug_mongo_state: Failed to get MongoDB credentials: {}", e);
+            Ok(format!("MongoDB client is {} and failed to get credentials: {}", 
+                if has_client { "initialized" } else { "NOT initialized" }, e))
+        }
+    }
+}
+
+/// Create and initialize a new MongoDB client
+/// This is a separate function to help with debugging
+#[command]
+async fn create_mongodb_client(connection_string: String) -> Result<bool, String> {
+    info!("Attempting to create MongoDB client with connection string: {}", 
+          if connection_string.len() > 20 {
+              format!("{}...{}", &connection_string[0..10], &connection_string[connection_string.len()-10..])
+          } else {
+              "too short to mask".to_string()
+          });
+    
+    // Set up client options with timeouts
+    let mut client_options = match mongodb::options::ClientOptions::parse(&connection_string).await {
+        Ok(options) => {
+            info!("Successfully parsed MongoDB connection string");
+            options
+        },
+        Err(e) => {
+            error!("Failed to parse MongoDB connection string: {}", e);
+            return Err(format!("Failed to parse MongoDB connection string: {}", e));
+        }
+    };
+    
+    // Set timeout options
+    client_options.connect_timeout = Some(std::time::Duration::from_secs(10));
+    client_options.server_selection_timeout = Some(std::time::Duration::from_secs(10));
+    
+    // Create MongoDB client with options
+    match mongodb::Client::with_options(client_options) {
+        Ok(client) => {
+            // Try a quick ping to verify the connection works
+            info!("MongoDB client created, testing with ping");
+            match client.database("admin").run_command(mongodb::bson::doc! {"ping": 1}, None).await {
+                Ok(_) => {
+                    info!("MongoDB ping successful");
+                    Ok(true)
+                },
+                Err(e) => {
+                    error!("MongoDB ping failed: {}", e);
+                    Err(format!("MongoDB connection succeeded but ping failed: {}", e))
+                }
+            }
+        },
+        Err(e) => {
+            error!("Failed to create MongoDB client with specific error: {}", e);
+            Err(format!("Failed to create MongoDB client: {}", e))
+        }
+    }
+}
+
 /// Initialize the Tauri application
 fn main() {
     tauri::Builder::default()
@@ -748,6 +1122,9 @@ fn main() {
             transcode_audio_file,
             transcode_audio_batch,
             upload_transcoded_tracks,
+            upload_album_artwork,
+            debug_mongo_state,
+            create_mongodb_client,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -3,6 +3,16 @@
   import { onMount } from 'svelte';
   import { invoke } from '@tauri-apps/api/core';
   
+  // Define TypeScript interfaces
+  interface TranscodingResult {
+    success: boolean;
+    input_path: string;
+    medium_quality_path?: string;
+    error?: string;
+    output_format: string;
+    bitrate: number;
+  }
+  
   // Store for selected files
   let selectedFiles: File[] = [];
   // Store for extracted metadata
@@ -26,6 +36,9 @@
   let mediumBitrate = 128;
   let outputFormat = 'mp3';
   let outputDir = 'transcoded';
+  
+  // Add mongoStatus variable at the top of the script section
+  let mongoStatus = '';
   
   // Handle file selection event from the FileUploader component
   async function handleFilesSelected(event: CustomEvent<{ files: File[] }>) {
@@ -81,36 +94,40 @@
     }
   }
   
-  // Function to transcode selected files
+  // Function to transcode files in a batch
   async function transcodeFiles() {
     if (selectedFilePaths.length === 0) {
-      alert('Please select at least one file to transcode.');
+      error = 'No files selected';
       return;
     }
     
     isTranscoding = true;
     transcodingProgress = 0;
-    transcodedFiles = [];
     error = null;
+    transcodedFiles = []; // Clear previous transcoded files
     
     try {
-      console.log(`Transcoding ${selectedFilePaths.length} files with bitrate ${mediumBitrate}kbps to ${outputFormat} format`);
+      console.log('Starting batch transcoding of', selectedFilePaths.length, 'files');
       
-      // Call the Tauri command to transcode the files
-      const results = await invoke<any[]>('transcode_audio_batch', {
+      // Call the batch transcoding function
+      const results = await invoke<TranscodingResult[]>('transcode_audio_batch', {
         filePaths: selectedFilePaths,
-        mediumBitrate,
+        mediumBitrate, 
         outputFormat,
-        outputDir
+        outputDir 
       });
       
-      transcodedFiles = results;
-      console.log('Transcoded files:', transcodedFiles);
+      console.log('Transcoding results:', results);
       
-      // Count successful transcodes
-      const successCount = results.filter(result => result.success).length;
-      if (successCount === 0) {
-        error = "No files were successfully transcoded.";
+      // Store the transcoding results
+      transcodedFiles = results || [];
+      
+      // Filter successful transcodes
+      const successfulTranscodes = transcodedFiles.filter(file => file.success);
+      console.log(`Successfully transcoded ${successfulTranscodes.length} of ${selectedFilePaths.length} files`);
+      
+      if (successfulTranscodes.length === 0) {
+        error = 'No files were successfully transcoded';
       }
     } catch (err) {
       console.error('Failed to transcode files:', err);
@@ -118,20 +135,29 @@
     } finally {
       isTranscoding = false;
       transcodingProgress = 100;
+      console.log('Transcoding completed, isTranscoding set to:', isTranscoding);
+      console.log('Number of transcoded files:', transcodedFiles?.length || 0);
     }
   }
   
   // Function to upload files to R2 and store metadata in MongoDB
   async function uploadFiles() {
+    console.log('uploadFiles() called - Starting upload process');
+    console.log('Current state - isLoading:', isLoading, 'isTranscoding:', isTranscoding, 'isUploading:', isUploading, 'transcodedFiles.length:', transcodedFiles.length);
+    
     if (transcodedFiles.length === 0 || extractedMetadata.length === 0) {
       alert('Please transcode files before uploading.');
+      console.log('Upload aborted - No transcoded files or metadata');
       return;
     }
     
     // Check if any transcoding was successful
     const successfulTranscodes = transcodedFiles.filter(file => file.success);
+    console.log('Successful transcodes:', successfulTranscodes.length, 'of', transcodedFiles.length);
+    
     if (successfulTranscodes.length === 0) {
       alert('No files were successfully transcoded. Cannot proceed with upload.');
+      console.log('Upload aborted - No successful transcodes');
       return;
     }
     
@@ -144,10 +170,38 @@
     try {
       console.log('Uploading transcoded files to R2 and storing metadata in MongoDB');
       
+      // Initialize R2 client first
+      console.log('Attempting to initialize R2 client...');
+      const r2Initialized = await invoke<boolean>('init_r2_client');
+      console.log('R2 client initialization result:', r2Initialized);
+      if (!r2Initialized) {
+        throw new Error('Failed to initialize R2 client. Please check your credentials in Settings.');
+      }
+      
+      // Initialize MongoDB client
+      console.log('Attempting to initialize MongoDB client...');
+      const mongoInitialized = await invoke<boolean>('init_mongo_client');
+      console.log('MongoDB client initialization result:', mongoInitialized);
+      if (!mongoInitialized) {
+        throw new Error('Failed to initialize MongoDB client. Please check your credentials in Settings.');
+      }
+      
       // Filter out metadata for files that were successfully transcoded
-      const successfulFilePaths = successfulTranscodes.map(file => file.original_path);
-      const filteredMetadata = extractedMetadata.filter(metadata => 
-        successfulFilePaths.includes(metadata.track.original_path));
+      const successfulFilePaths = successfulTranscodes.map(file => file.input_path);
+      console.log('Successful file paths:', successfulFilePaths);
+      console.log('Metadata:', extractedMetadata);
+      
+      const filteredMetadata = extractedMetadata.filter(metadata => {
+        const metadataPath = metadata.track.original_path || metadata.fileInfo.path;
+        return successfulFilePaths.some(path => path === metadataPath);
+      });
+      
+      console.log('Filtered metadata:', filteredMetadata);
+      console.log('Transcoding results to upload:', successfulTranscodes);
+      
+      if (filteredMetadata.length !== successfulTranscodes.length) {
+        console.warn(`Mismatch between metadata (${filteredMetadata.length}) and transcoded files (${successfulTranscodes.length})`);
+      }
       
       // Call the Tauri command to upload the files
       const uploadResult = await invoke<{
@@ -159,8 +213,9 @@
         transcodingResults: successfulTranscodes,
         audioMetadataList: filteredMetadata,
         pathConfig: {
-          originalPrefix: 'tracks/original',
-          mediumPrefix: 'tracks/medium'
+          original_prefix: 'tracks/original',
+          medium_prefix: 'tracks/medium',
+          album_art_prefix: 'albums/artwork'
         }
       });
       
@@ -268,6 +323,86 @@
       <FileUploader on:filesSelected={handleFilesSelected} />
     </div>
     
+    <!-- Add debug button -->
+    {#if import.meta.env.DEV}
+      <div class="debug-section">
+        <button 
+          class="debug-button" 
+          on:click={async () => {
+            try {
+              console.log('Getting MongoDB client state...');
+              mongoStatus = 'Checking...';
+              const stateInfo = await invoke<string>('debug_mongo_state');
+              console.log('MongoDB state:', stateInfo);
+              mongoStatus = stateInfo;
+              
+              // Try initializing the client
+              console.log('Testing MongoDB client initialization...');
+              const mongoInitialized = await invoke<boolean>('init_mongo_client');
+              console.log('MongoDB client initialization result:', mongoInitialized);
+              
+              if (mongoInitialized) {
+                // Now test the connection
+                try {
+                  console.log('Testing MongoDB connection...');
+                  const connectionResult = await invoke<boolean>('test_mongo_connection');
+                  console.log('MongoDB connection test result:', connectionResult);
+                  
+                  if (connectionResult) {
+                    alert('MongoDB connection successful! Client is properly initialized and connected.');
+                    mongoStatus = 'Connection successful! Client is properly initialized and connected.';
+                  } else {
+                    alert('MongoDB client initialized but connection test failed.');
+                    mongoStatus = 'Client initialized but connection test failed.';
+                  }
+                } catch (connError) {
+                  console.error('MongoDB connection test error:', connError);
+                  alert(`MongoDB client initialized but connection test failed: ${connError}`);
+                  mongoStatus = `Connection test failed: ${connError}`;
+                }
+              } else {
+                // If initialization failed, try to get credentials and create client directly
+                try {
+                  console.log('Attempting to create MongoDB client directly...');
+                  // Create a direct connection with the string we have in the dev file
+                  const mongoConn = await invoke<string>('get_mongo_credentials');
+                  console.log('Got MongoDB connection string (masked):', 
+                    mongoConn.length > 20 ? 
+                      `${mongoConn.substring(0, 10)}...${mongoConn.substring(mongoConn.length - 10)}` : 
+                      '(too short to mask)');
+                  
+                  // Try to create the client directly
+                  const directClientResult = await invoke<boolean>('create_mongodb_client', { connectionString: mongoConn });
+                  console.log('Direct client creation result:', directClientResult);
+                  
+                  if (directClientResult) {
+                    alert('Successfully created MongoDB client directly! The issue was with the client initialization process, not the credentials.');
+                    mongoStatus = 'Client created directly with valid credentials.';
+                  } else {
+                    alert('Failed to create MongoDB client directly. There may be an issue with the connection string format.');
+                    mongoStatus = 'Failed to create client directly.';
+                  }
+                } catch (directErr) {
+                  console.error('Error creating MongoDB client directly:', directErr);
+                  alert(`Failed to create MongoDB client directly: ${directErr}`);
+                  mongoStatus = `Failed to create client directly: ${directErr}`;
+                }
+              }
+            } catch (err) {
+              console.error('Error during MongoDB debugging:', err);
+              alert(`Error during MongoDB debugging: ${err}`);
+              mongoStatus = `Error: ${err}`;
+            }
+          }}
+        >
+          Test MongoDB Connection
+        </button>
+        <div class="debug-status">
+          MongoDB Status: {mongoStatus || 'Unknown'}
+        </div>
+      </div>
+    {/if}
+    
     {#if isLoading}
       <div class="loading">
         <p>
@@ -360,11 +495,11 @@
         <div class="transcoded-list">
           {#each transcodedFiles as file}
             <div class="transcoded-item" class:failed={!file.success}>
-              <div class="file-path">{file.original_path.split('/').pop()}</div>
+              <div class="file-path">{file?.input_path ? file.input_path.split('/').pop() : 'Unknown file'}</div>
               {#if file.success}
                 <div class="success-label">✓ Transcoded</div>
               {:else}
-                <div class="error-label">✗ Failed: {file.error}</div>
+                <div class="error-label">✗ Failed: {file.error || 'Unknown error'}</div>
               {/if}
             </div>
           {/each}
@@ -432,6 +567,32 @@
           Upload to Library
         </button>
       </div>
+      
+      {#if import.meta.env.DEV}
+        <div class="debug-section">
+          <div class="debug-info">
+            <p><strong>Button Control Variables:</strong></p>
+            <ul>
+              <li>isLoading: {isLoading}</li>
+              <li>isTranscoding: {isTranscoding}</li>
+              <li>isUploading: {isUploading}</li>
+              <li>transcodedFiles.length: {transcodedFiles.length}</li>
+              <li>Button should be {isLoading || isTranscoding || isUploading || transcodedFiles.length === 0 ? 'DISABLED' : 'ENABLED'}</li>
+            </ul>
+            <button 
+              class="debug-button" 
+              on:click={() => {
+                isLoading = false;
+                isTranscoding = false;
+                isUploading = false;
+                console.log('Manually reset loading flags');
+              }}
+            >
+              Reset Loading Flags
+            </button>
+          </div>
+        </div>
+      {/if}
     {/if}
   </div>
   
@@ -724,5 +885,38 @@
   .instructions li {
     margin-bottom: 6px;
     color: #4a5568;
+  }
+  
+  .debug-section {
+    margin-top: 16px;
+    border-top: 1px dashed #ccc;
+    padding-top: 16px;
+  }
+  
+  .debug-button {
+    background-color: #6b7280;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .debug-button:hover {
+    background-color: #4b5563;
+  }
+  
+  .debug-status {
+    margin-top: 8px;
+    padding: 4px 8px;
+    background-color: #f3f4f6;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #4b5563;
+  }
+  
+  .debug-info {
+    margin-bottom: 16px;
   }
 </style> 

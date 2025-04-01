@@ -32,9 +32,10 @@ type R2Result<T> = std::result::Result<T, R2Error>;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct R2Credentials {
+    pub account_id: String,
     pub bucket_name: String,
-    pub access_key: String,
-    pub secret_key: String,
+    pub access_key_id: String,
+    pub secret_access_key: String,
     pub endpoint: String,
 }
 
@@ -88,8 +89,8 @@ impl R2Client {
 #[tauri::command]
 pub async fn initialize_r2_client(credentials: R2Credentials) -> Result<R2Client, String> {
     let creds = Credentials::new(
-        &credentials.access_key,
-        &credentials.secret_key,
+        &credentials.access_key_id,
+        &credentials.secret_access_key,
         None,
         None,
         "R2Credentials",
