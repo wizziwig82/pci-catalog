@@ -453,6 +453,17 @@
     }
   }
 
+  // Function to select/deselect all tracks
+  function selectAllTracks(select: boolean) {
+    if (select) {
+      // Select all tracks
+      selectedTrackIndices = [...Array(extractedMetadata.length).keys()];
+    } else {
+      // Deselect all tracks
+      selectedTrackIndices = [];
+    }
+  }
+
   // Function to enable bulk edit mode
   function startBulkEdit() {
     bulkEditMode = true;
@@ -1133,6 +1144,26 @@
           </div>
         {:else}
           <div class="tracks-list">
+            <div class="tracks-header">
+              <div class="select-all-container">
+                <input 
+                  type="checkbox" 
+                  id="select-all-tracks"
+                  checked={selectedTrackIndices.length === extractedMetadata.length && extractedMetadata.length > 0}
+                  on:change={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    selectAllTracks(target.checked);
+                  }} 
+                />
+                <label for="select-all-tracks">Select All</label>
+              </div>
+              {#if selectedTrackIndices.length > 0}
+                <button class="bulk-edit-button-small" on:click={startBulkEdit}>
+                  Bulk Edit ({selectedTrackIndices.length})
+                </button>
+              {/if}
+            </div>
+            
             {#each extractedMetadata as metadata, i}
               <div class="track-item" class:selected={selectedTrackIndices.includes(i)}>
                 <div class="track-select">
@@ -1782,6 +1813,43 @@
     gap: 8px;
     max-height: 500px;
     overflow-y: auto;
+  }
+  
+  .tracks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background-color: #f7fafc;
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  
+  .select-all-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .select-all-container label {
+    font-size: 14px;
+    color: #4a5568;
+    cursor: pointer;
+  }
+  
+  .bulk-edit-button-small {
+    background-color: #805ad5;
+    color: white;
+    padding: 4px 12px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .bulk-edit-button-small:hover {
+    background-color: #6b46c1;
   }
   
   .track-item {
