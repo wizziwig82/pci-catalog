@@ -1,5 +1,4 @@
 <script lang="ts">
-  import FileUploader from '$lib/components/FileUploader.svelte';
   import { onMount } from 'svelte';
   import { invoke } from '@tauri-apps/api/core';
   
@@ -90,33 +89,6 @@
   // Writer and publisher percentages validation
   let writerPercentagesValid = true;
   let publisherPercentagesValid = true;
-  
-  // Handle file selection event from the FileUploader component
-  async function handleFilesSelected(event: CustomEvent<{ files: File[] }>) {
-    selectedFiles = event.detail.files;
-    console.log('Selected files:', selectedFiles);
-    extractedMetadata = [];
-    transcodedFiles = [];
-    uploadedFiles = [];
-    failedUploads = [];
-    error = null;
-    
-    try {
-      // Open the file dialog to select music files
-      isLoading = true;
-      selectedFilePaths = await invoke<string[]>('select_audio_files');
-      
-      if (selectedFilePaths.length > 0) {
-        await extractMetadata();
-      } else {
-        isLoading = false;
-      }
-    } catch (err) {
-      console.error('Failed to select files:', err);
-      error = err instanceof Error ? err.message : String(err);
-      isLoading = false;
-    }
-  }
   
   // Extract metadata from selected files
   async function extractMetadata() {
@@ -616,8 +588,6 @@
       <button class="select-button" on:click={openFileDialog}>
         Select Audio Files
       </button>
-      <p class="or-text">or</p>
-      <FileUploader on:filesSelected={handleFilesSelected} />
     </div>
     
     <!-- Add debug button -->
@@ -1265,11 +1235,6 @@
   
   .select-button:hover {
     background-color: #3182ce;
-  }
-  
-  .or-text {
-    margin: 10px 0;
-    color: #718096;
   }
   
   .loading, .error {
