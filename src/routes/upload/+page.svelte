@@ -1,6 +1,10 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { invoke } from '@tauri-apps/api/core';
+  import { listen } from '@tauri-apps/api/event';
+  import FileUploader from '$lib/components/FileUploader.svelte';
+  import TagSelector from '$lib/components/TagSelector.svelte';
+  import { instrumentTags, moodTags, tagsToString } from '$lib/stores/tagData';
   
   // Define TypeScript interfaces
   interface TranscodingResult {
@@ -89,6 +93,34 @@
   // Writer and publisher percentages validation
   let writerPercentagesValid = true;
   let publisherPercentagesValid = true;
+  
+  // Add selected track state variables for instruments and moods
+  let selectedTrackInstruments: string[] = [];
+  let selectedTrackMood: string[] = [];
+  
+  // Handle tag selector changes
+  function handleInstrumentTagsChanged(event: CustomEvent<{ tags: string[] }>) {
+    if (selectedTrackIndex >= 0) {
+      selectedTrackInstruments = event.detail.tags;
+      extractedMetadata[selectedTrackIndex].track.instruments = event.detail.tags;
+    }
+  }
+  
+  function handleMoodTagsChanged(event: CustomEvent<{ tags: string[] }>) {
+    if (selectedTrackIndex >= 0) {
+      selectedTrackMood = event.detail.tags;
+      extractedMetadata[selectedTrackIndex].track.mood = event.detail.tags;
+    }
+  }
+  
+  // Handle bulk edit tag changes
+  function handleBulkInstrumentTagsChanged(event: CustomEvent<{ tags: string[] }>) {
+    bulkEditFields.instruments = tagsToString(event.detail.tags);
+  }
+  
+  function handleBulkMoodTagsChanged(event: CustomEvent<{ tags: string[] }>) {
+    bulkEditFields.mood = tagsToString(event.detail.tags);
+  }
   
   // Extract metadata from selected files
   async function extractMetadata() {
@@ -821,13 +853,23 @@
               </div>
               
               <div class="form-group">
-                <label for="bulk-instruments">Instruments (comma separated)</label>
-                <input id="bulk-instruments" type="text" bind:value={bulkEditFields.instruments} placeholder="Guitar, Piano, Drums..." />
+                <label for="bulk-instruments">Instruments</label>
+                <TagSelector 
+                  tagOptions={$instrumentTags} 
+                  selectedTagsString={bulkEditFields.instruments}
+                  placeholder="Add instrument (press Enter)"
+                  on:tagsChanged={handleBulkInstrumentTagsChanged}
+                />
               </div>
               
               <div class="form-group">
-                <label for="bulk-mood">Mood (comma separated)</label>
-                <input id="bulk-mood" type="text" bind:value={bulkEditFields.mood} placeholder="Happy, Sad, Energetic..." />
+                <label for="bulk-mood">Mood</label>
+                <TagSelector 
+                  tagOptions={$moodTags} 
+                  selectedTagsString={bulkEditFields.mood}
+                  placeholder="Add mood (press Enter)"
+                  on:tagsChanged={handleBulkMoodTagsChanged}
+                />
               </div>
               
               <div class="form-actions">
@@ -999,31 +1041,24 @@
               </div>
               
               <div class="form-section">
-                <h5>Instruments & Mood</h5>
                 <div class="form-row">
                   <div class="form-group">
-                    <label for="track-instruments">Instruments (comma separated)</label>
-                    <input 
-                      id="track-instruments" 
-                      type="text" 
-                      value={extractedMetadata[selectedTrackIndex].track.instruments?.join(', ') || ''} 
-                      on:input={(e) => {
-                        const target = e.target as HTMLInputElement;
-                        extractedMetadata[selectedTrackIndex].track.instruments = target.value.split(',').map((i: string) => i.trim());
-                      }}
+                    <label for="track-instruments">Instruments</label>
+                    <TagSelector 
+                      tagOptions={$instrumentTags} 
+                      selectedTagsString={extractedMetadata[selectedTrackIndex].track.instruments?.join(', ') || ''}
+                      placeholder="Add instrument (press Enter)"
+                      on:tagsChanged={handleInstrumentTagsChanged}
                     />
                   </div>
                   
                   <div class="form-group">
-                    <label for="track-mood">Mood (comma separated)</label>
-                    <input 
-                      id="track-mood" 
-                      type="text" 
-                      value={extractedMetadata[selectedTrackIndex].track.mood?.join(', ') || ''} 
-                      on:input={(e) => {
-                        const target = e.target as HTMLInputElement;
-                        extractedMetadata[selectedTrackIndex].track.mood = target.value.split(',').map((m: string) => m.trim());
-                      }}
+                    <label for="track-mood">Mood</label>
+                    <TagSelector 
+                      tagOptions={$moodTags} 
+                      selectedTagsString={extractedMetadata[selectedTrackIndex].track.mood?.join(', ') || ''}
+                      placeholder="Add mood (press Enter)"
+                      on:tagsChanged={handleMoodTagsChanged}
                     />
                   </div>
                 </div>
