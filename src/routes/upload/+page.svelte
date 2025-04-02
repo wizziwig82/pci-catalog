@@ -83,9 +83,13 @@
   
   // Fields for bulk editing
   let bulkEditFields = {
+    album: "",
+    artist: "",
     genre: "",
     writers: "",
+    writer_percentages: [] as number[],
     publishers: "",
+    publisher_percentages: [] as number[],
     instruments: "",
     mood: ""
   };
@@ -463,6 +467,12 @@
     }
 
     for (const index of selectedTrackIndices) {
+      if (bulkEditFields.album) {
+        extractedMetadata[index].album.name = bulkEditFields.album;
+      }
+      if (bulkEditFields.artist) {
+        extractedMetadata[index].album.artist = bulkEditFields.artist;
+      }
       if (bulkEditFields.genre) {
         extractedMetadata[index].track.genre = bulkEditFields.genre.split(',').map(g => g.trim());
       }
@@ -490,9 +500,13 @@
 
     // Reset bulk edit fields
     bulkEditFields = {
+      album: "",
+      artist: "",
       genre: "",
       writers: "",
+      writer_percentages: [],
       publishers: "",
+      publisher_percentages: [],
       instruments: "",
       mood: ""
     };
@@ -835,41 +849,73 @@
         
         {#if bulkEditMode}
           <div class="bulk-edit-panel">
-            <h4>Bulk Edit Selected Tracks</h4>
+            <h4>Bulk Edit Selected Tracks ({selectedTrackIndices.length} selected)</h4>
             <div class="bulk-edit-form">
-              <div class="form-group">
-                <label for="bulk-genre">Genre (comma separated)</label>
-                <input id="bulk-genre" type="text" bind:value={bulkEditFields.genre} placeholder="Rock, Pop, Jazz..." />
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="bulk-album">Album</label>
+                  <input id="bulk-album" type="text" bind:value={bulkEditFields.album} placeholder="Album Name" />
+                </div>
+                
+                <div class="form-group">
+                  <label for="bulk-artist">Artist</label>
+                  <input id="bulk-artist" type="text" bind:value={bulkEditFields.artist} placeholder="Artist Name" />
+                </div>
               </div>
               
-              <div class="form-group">
-                <label for="bulk-writers">Writers (comma separated)</label>
-                <input id="bulk-writers" type="text" bind:value={bulkEditFields.writers} placeholder="John Doe, Jane Smith..." />
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="bulk-genre">Genre (comma separated)</label>
+                  <input id="bulk-genre" type="text" bind:value={bulkEditFields.genre} placeholder="Rock, Pop, Jazz..." />
+                </div>
               </div>
               
-              <div class="form-group">
-                <label for="bulk-publishers">Publishers (comma separated)</label>
-                <input id="bulk-publishers" type="text" bind:value={bulkEditFields.publishers} placeholder="Universal Music, Sony Music..." />
+              <div class="form-section">
+                <h5>Writers</h5>
+                <div class="tags-input">
+                  <input 
+                    type="text" 
+                    placeholder="Add writers (comma separated)" 
+                    bind:value={bulkEditFields.writers}
+                  />
+                  <div class="bulk-hint">Writers will be split by commas and percentages will be distributed equally</div>
+                </div>
               </div>
               
-              <div class="form-group">
-                <label for="bulk-instruments">Instruments</label>
-                <TagSelector 
-                  tagOptions={$instrumentTags} 
-                  selectedTagsString={bulkEditFields.instruments}
-                  placeholder="Add instrument (press Enter)"
-                  on:tagsChanged={handleBulkInstrumentTagsChanged}
-                />
+              <div class="form-section">
+                <h5>Publishers</h5>
+                <div class="tags-input">
+                  <input 
+                    type="text" 
+                    placeholder="Add publishers (comma separated)" 
+                    bind:value={bulkEditFields.publishers}
+                  />
+                  <div class="bulk-hint">Publishers will be split by commas and percentages will be distributed equally</div>
+                </div>
               </div>
               
-              <div class="form-group">
-                <label for="bulk-mood">Mood</label>
-                <TagSelector 
-                  tagOptions={$moodTags} 
-                  selectedTagsString={bulkEditFields.mood}
-                  placeholder="Add mood (press Enter)"
-                  on:tagsChanged={handleBulkMoodTagsChanged}
-                />
+              <div class="form-section">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="bulk-instruments">Instruments</label>
+                    <TagSelector 
+                      tagOptions={$instrumentTags} 
+                      selectedTagsString={bulkEditFields.instruments}
+                      placeholder="Add instrument (press Enter)"
+                      on:tagsChanged={handleBulkInstrumentTagsChanged}
+                    />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="bulk-mood">Mood</label>
+                    <TagSelector 
+                      tagOptions={$moodTags} 
+                      selectedTagsString={bulkEditFields.mood}
+                      placeholder="Add mood (press Enter)"
+                      on:tagsChanged={handleBulkMoodTagsChanged}
+                    />
+                  </div>
+                </div>
               </div>
               
               <div class="form-actions">
@@ -1810,5 +1856,12 @@
     justify-content: flex-end;
     gap: 10px;
     margin-top: 16px;
+  }
+  
+  .bulk-hint {
+    font-size: 12px;
+    color: #718096;
+    margin-top: 4px;
+    font-style: italic;
   }
 </style> 
