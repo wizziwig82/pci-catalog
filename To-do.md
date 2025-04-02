@@ -44,10 +44,10 @@ This to-do list outlines the steps to build a music management app, covering set
 
 ### 1.5 Handle Album Creation
 
-- [ ] Implement logic to check if an album exists in MongoDB based on metadata; create a new album if it doesn't.
-- [ ] Ensure tracks are correctly associated with albums using album_id.
-- [ ] Write tests for album existence check and creation (in tests/unit/backend/metadata).
-- [ ] Write tests for track-to-album association (in tests/integration/upload-workflow).
+- [x] Implement logic to check if an album exists in MongoDB based on metadata; create a new album if it doesn't.
+- [x] Ensure tracks are correctly associated with albums using album_id.
+- [x] Write tests for album existence check and creation (in tests/unit/backend/metadata).
+- [x] Write tests for track-to-album association (in tests/integration/upload-workflow).
 
 ## Phase 2: Editing and Search
 ### 2.1 Implement Database Catalog Page

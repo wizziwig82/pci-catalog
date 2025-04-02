@@ -48,6 +48,9 @@ use upload::upload_transcoded_tracks;
 use upload::upload_album_artwork;
 // use upload::{BulkUploadResponse, UploadedTrackInfo, FailedTrackInfo, UploadPathConfig};
 
+// Import commands module
+mod commands;
+
 /// MongoDB client state
 pub struct MongoState {
     client: Mutex<Option<mongodb::Client>>,
@@ -1125,6 +1128,7 @@ fn main() {
             upload_album_artwork,
             debug_mongo_state,
             create_mongodb_client,
+            commands::clear_test_data,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

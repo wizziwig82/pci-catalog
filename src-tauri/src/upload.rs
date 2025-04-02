@@ -118,23 +118,52 @@ async fn store_metadata_in_mongodb(
     audio_metadata: &AudioMetadata,
     r2_paths: HashMap<String, String>,
 ) -> Result<(String, String), String> {
-    // Create or update album
-    let album_id = audio_metadata.album.album_id.clone();
+    // Original album ID from metadata
+    let original_album_id = audio_metadata.album.album_id.clone();
     let track_id = audio_metadata.track.track_id.clone();
+    
+    // MongoDB collections
+    let albums_collection: mongodb::Collection<mongodb::bson::Document> = mongo_client.database("music_library").collection("albums");
+    let tracks_collection: mongodb::Collection<mongodb::bson::Document> = mongo_client.database("music_library").collection("tracks");
+    
+    // First, check if a similar album already exists based on name and artist
+    let album_name = audio_metadata.album.name.clone();
+    
+    // Skip album existence check if album name is "Unknown Album" as this is likely
+    // a default value when metadata extraction failed
+    let mut album_id = original_album_id.clone();
+    if album_name != "Unknown Album" {
+        let album_query = mongodb::bson::doc! { 
+            "name": &album_name 
+        };
+        
+        // Try to find existing album with the same name
+        let existing_album_doc = albums_collection.find_one(album_query, None).await
+            .map_err(|e| format!("Failed to search for existing album: {}", e))?;
+        
+        if let Some(doc) = existing_album_doc {
+            // Album exists, use its ID instead of the generated one
+            album_id = doc.get_str("_id")
+                .map_err(|e| format!("Failed to get album ID from document: {}", e))?
+                .to_string();
+            
+            info!("Found existing album '{}' with ID {}, using instead of generated ID", album_name, album_id);
+        }
+    }
     
     // Create album document
     let album = Album {
-        name: audio_metadata.album.name.clone(),
+        name: album_name,
         track_ids: vec![track_id.clone()],
         art_path: audio_metadata.album.art_path.clone(),
         release_date: None,
         publisher: None,
     };
     
-    // Create track document
+    // Create track document, ensuring it points to the potentially updated album_id
     let track = Track {
         title: audio_metadata.track.title.clone(),
-        album_id: album_id.clone(),
+        album_id: album_id.clone(), // Use potentially updated album_id here
         track_number: audio_metadata.track.track_number.map(|n| n as i32),
         filename: audio_metadata.track.filename.clone(),
         duration: audio_metadata.track.duration.map_or(0, |d| d as i32),
@@ -146,11 +175,7 @@ async fn store_metadata_in_mongodb(
         waveform_data: None,
     };
     
-    // MongoDB collections
-    let albums_collection = mongo_client.database("music_library").collection("albums");
-    let tracks_collection = mongo_client.database("music_library").collection("tracks");
-    
-    // Check if album exists
+    // Check if album exists by direct ID now
     let filter = mongodb::bson::doc! { "_id": &album_id };
     let album_exists = albums_collection.count_documents(filter.clone(), None).await
         .map_err(|e| format!("Failed to check if album exists: {}", e))?;
