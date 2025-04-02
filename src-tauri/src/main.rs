@@ -1129,6 +1129,8 @@ fn main() {
             debug_mongo_state,
             create_mongodb_client,
             commands::clear_test_data,
+            commands::fetch_all_tracks,
+            commands::test_mongodb_collections,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

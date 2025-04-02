@@ -30,6 +30,7 @@
 		<div class="nav-links">
 			<a href="/" class="nav-link">Home</a>
 			<a href="/upload" class="nav-link">Upload</a>
+			<a href="/catalog" class="nav-link">Catalog</a>
 			<a href="/settings" class="nav-link">Settings</a>
 		</div>
 	</div>
