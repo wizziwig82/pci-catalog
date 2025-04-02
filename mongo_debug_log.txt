@@ -1,0 +1,1266 @@
+
+> music-library-manager@0.0.1 tauri
+> tauri dev
+
+     Running BeforeDevCommand (`npm run dev`)
+
+> music-library-manager@0.0.1 dev
+> vite dev
+
+✔ [paraglide-js] Compilation complete (locale-modules)
+
+  VITE v6.2.3  ready in 1287 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+     Running DevCommand (`cargo  run --no-default-features --color always --`)
+        Info Watching /Users/wizziwig/Documents/PCI-catalog-manager/music-library-manager-2.0/src-tauri for changes...
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `app`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:29:57[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m29[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_store_mongo_credentials<R: Runtime>(app: tauri::AppHandle<R>, credentials: MongoCredentials) -> Result<(), String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                         [0m[0m[1m[33m^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_app`[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_variables)]` on by default[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `credentials`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:29:83[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m29[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_store_mongo_credentials<R: Runtime>(app: tauri::AppHandle<R>, credentials: MongoCredentials) -> Result<(), String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                                   [0m[0m[1m[33m^^^^^^^^^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_credentials`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `app`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:36:55[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m36[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_get_mongo_credentials<R: Runtime>(app: tauri::AppHandle<R>) -> Result<MongoCredentials, String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                       [0m[0m[1m[33m^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_app`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `app`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:43:58[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m43[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_delete_mongo_credentials<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                          [0m[0m[1m[33m^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_app`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `app`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:50:54[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m50[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_store_r2_credentials<R: Runtime>(app: tauri::AppHandle<R>, credentials: R2Credentials) -> Result<(), String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                      [0m[0m[1m[33m^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_app`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `credentials`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:50:80[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m50[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_store_r2_credentials<R: Runtime>(app: tauri::AppHandle<R>, credentials: R2Credentials) -> Result<(), String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                                [0m[0m[1m[33m^^^^^^^^^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_credentials`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `app`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:57:52[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m57[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_get_r2_credentials<R: Runtime>(app: tauri::AppHandle<R>) -> Result<R2Credentials, String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                    [0m[0m[1m[33m^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_app`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `app`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:64:55[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m64[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_delete_r2_credentials<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                       [0m[0m[1m[33m^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_app`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `app`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:71:49[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m71[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_has_credentials<R: Runtime>(app: tauri::AppHandle<R>, credential_type: String) -> Result<bool, String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                 [0m[0m[1m[33m^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_app`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `credential_type`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/credentials.rs:71:75[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m71[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn legacy_has_credentials<R: Runtime>(app: tauri::AppHandle<R>, credential_type: String) -> Result<bool, String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                           [0m[0m[1m[33m^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_credential_type`[0m
+
+[1m[33mwarning[0m[1m:[0m `app` (lib) generated 10 warnings
+[0m[1m[33mwarning[0m[0m[1m: unused import: `debug`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:6:11[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m6[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse log::{debug, error, info, warn};[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m           [0m[0m[1m[33m^^^^^[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m  [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_imports)]` on by default[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `Client`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:7:26[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m7[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse mongodb::{bson::doc, Client};[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                          [0m[0m[1m[33m^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `Path`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:12:17[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m12[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse std::path::{Path, PathBuf};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                 [0m[0m[1m[33m^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `AppHandle`, `Window`, and `async_runtime`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:17:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m17[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async_runtime, command, AppHandle, Manager, State, Window,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^[0m[0m           [0m[0m[1m[33m^^^^^^^^^[0m[0m                  [0m[0m[1m[33m^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `std::io::Read`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/audio/metadata.rs:3:5[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m3[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse std::io::Read;[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `Context` and `anyhow`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/audio/transcoding.rs:6:22[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m6[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse anyhow::{Result, anyhow, Context};[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                      [0m[0m[1m[33m^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `tempfile::TempDir`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/audio/transcoding.rs:8:5[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m8[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse tempfile::TempDir;[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `regex::Regex`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/audio/transcoding.rs:9:5[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m9[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse regex::Regex;[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `TranscodingOptions`, `TranscodingResult`, and `transcode_file`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/audio/mod.rs:5:23[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m5[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub use transcoding::{transcode_file, TranscodingOptions, TranscodingResult}; [0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                       [0m[0m[1m[33m^^^^^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `transcode_to_quality`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:37:81[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m37[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse audio::transcoding::{transcode_file, TranscodingOptions, TranscodingResult, transcode_to_quality};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                                                                 [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `PathBuf`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:2:23[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m2[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse std::path::{Path, PathBuf};[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                       [0m[0m[1m[33m^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `std::sync::Arc`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:3:5[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m3[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse std::sync::Arc;[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `uuid::Uuid`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:6:5[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m6[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse uuid::Uuid;[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `error`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:7:17[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m7[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse log::{info, error, warn};[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                 [0m[0m[1m[33m^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `tokio::sync::Mutex`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:9:5[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m9[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse tokio::sync::Mutex;[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `std::time::Duration`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:11:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m11[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse std::time::Duration;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `tauri::async_runtime`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:12:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m12[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse tauri::async_runtime;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `AlbumMetadata` and `TrackMetadata`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:15:20[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m15[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse crate::audio::{TrackMetadata, AlbumMetadata, AudioMetadata};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                    [0m[0m[1m[33m^^^^^^^^^^^^^[0m[0m  [0m[0m[1m[33m^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `TranscodingOptions`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:16:33[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m16[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse crate::audio::transcoding::{TranscodingOptions, TranscodingResult};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                 [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `R2Client`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:17:26[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m17[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse crate::storage::r2::{R2Client, R2UploadResult};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                          [0m[0m[1m[33m^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused imports: `DbResponse` and `MongoClient as MongoClientImpl`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:18:31[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m18[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse crate::storage::mongodb::{MongoClient as MongoClientImpl, Album, Track, DbResponse};[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                               [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m                [0m[0m[1m[33m^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unreachable statement[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:172:13[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m166[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m/[0m[0m [0m[0m                match save_dev_credentials(&dev_creds).await {[0m
+[0m[1m[38;5;12m167[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                    Ok(_) => return Ok(true),[0m
+[0m[1m[38;5;12m168[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                    Err(e) => return Err(format!("Failed to store R2 credentials in dev fallback: {}", e)),[0m
+[0m[1m[38;5;12m169[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                }[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|_________________-[0m[0m [0m[0m[1m[38;5;12many code following this `match` expression is unreachable, as all arms diverge[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m172[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m            return Err(format!("Failed to access keychain: {}", e));[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m               [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[33munreachable statement[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unreachable_code)]` on by default[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unreachable expression[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:218:13[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m212[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m/[0m[0m [0m[0m                match save_dev_credentials(&dev_creds).await {[0m
+[0m[1m[38;5;12m213[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                    Ok(_) => return Ok(true),[0m
+[0m[1m[38;5;12m214[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                    Err(e) => return Err(format!("Failed to store R2 credentials in dev fallback: {}", e)),[0m
+[0m[1m[38;5;12m215[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                }[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|_________________-[0m[0m [0m[0m[1m[38;5;12many code following this `match` expression is unreachable, as all arms diverge[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m218[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m            Err(format!("Failed to store R2 credentials: {}", e))[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m               [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[33munreachable expression[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unreachable statement[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:330:13[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m324[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m/[0m[0m [0m[0m                match save_dev_credentials(&dev_creds).await {[0m
+[0m[1m[38;5;12m325[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                    Ok(_) => return Ok(true),[0m
+[0m[1m[38;5;12m326[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                    Err(e) => return Err(format!("Failed to store MongoDB credentials in dev fallback: {}", e)),[0m
+[0m[1m[38;5;12m327[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                }[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|_________________-[0m[0m [0m[0m[1m[38;5;12many code following this `match` expression is unreachable, as all arms diverge[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m330[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m            return Err(format!("Failed to access keychain: {}", e));[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m               [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[33munreachable statement[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unreachable expression[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:367:13[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m361[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m/[0m[0m [0m[0m                match save_dev_credentials(&dev_creds).await {[0m
+[0m[1m[38;5;12m362[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                    Ok(_) => return Ok(true),[0m
+[0m[1m[38;5;12m363[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                    Err(e) => return Err(format!("Failed to store MongoDB credentials in dev fallback: {}", e)),[0m
+[0m[1m[38;5;12m364[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m                }[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m|_________________-[0m[0m [0m[0m[1m[38;5;12many code following this `match` expression is unreachable, as all arms diverge[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m367[0m[0m [0m[0m[1m[38;5;12m|[0m[0m   [0m[0m            Err(format!("Failed to store MongoDB credentials: {}", e))[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m               [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[33munreachable expression[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `output_dir`[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:814:5[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m814[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    output_dir: String,[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_output_dir`[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_variables)]` on by default[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `make_public`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:72:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m72[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    make_public: bool,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_make_public`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: variable does not need to be mutable[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:83:9[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m83[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    let mut put_request = r2_client[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m         [0m[0m[1m[38;5;12m----[0m[0m[1m[33m^^^^^^^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m         [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m         [0m[0m[1m[38;5;12mhelp: remove this `mut`[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_mut)]` on by default[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused variable: `album_id`[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/upload.rs:297:10[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m297[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    let (album_id, track_id) = store_metadata_in_mongodb([0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m          [0m[0m[1m[33m^^^^^^^^[0m[0m [0m[0m[1m[33mhelp: if this is intentional, prefix it with an underscore: `_album_id`[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `FormatReader`[0m
+[0m [0m[0m[1m[38;5;12m--> [0m[0msrc/audio/metadata.rs:9:47[0m
+[0m  [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m9[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse symphonia::core::formats::{FormatOptions, FormatReader};[0m
+[0m  [0m[0m[1m[38;5;12m|[0m[0m                                               [0m[0m[1m[33m^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: unused import: `Manager`[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/main.rs:17:40[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m17[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    async_runtime, command, AppHandle, Manager, State, Window,[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                                        [0m[0m[1m[33m^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: variant `Other` is never constructed[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/audio/transcoding.rs:29:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m12[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub enum TranscodingError {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m          [0m[0m[1m[38;5;12m----------------[0m[0m [0m[0m[1m[38;5;12mvariant in this enum[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m29[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    Other(String),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `TranscodingError` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(dead_code)]` on by default[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `transcode_to_quality` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/audio/transcoding.rs:603:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m603[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn transcode_to_quality([0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: variants `FileReadError`, `FileWriteError`, `ConnectionError`, `BucketNotFound`, and `Other` are never constructed[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/r2.rs:16:5[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m11[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub enum R2Error {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m          [0m[0m[1m[38;5;12m-------[0m[0m [0m[0m[1m[38;5;12mvariants in this enum[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m16[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    FileReadError(String),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m19[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    FileWriteError(String),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m22[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    ConnectionError(String),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^^[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m25[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    BucketNotFound(String),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^^^^^^^^^^[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m28[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    Other(String),[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[33m^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `R2Error` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis[0m
+
+[0m[1m[33mwarning[0m[0m[1m: type alias `R2Result` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/r2.rs:31:6[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m31[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mtype R2Result<T> = std::result::Result<T, R2Error>;[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m      [0m[0m[1m[33m^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: struct `R2Client` is never constructed[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/r2.rs:69:12[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m69[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub struct R2Client {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m            [0m[0m[1m[33m^^^^^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `R2Client` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis[0m
+
+[0m[1m[33mwarning[0m[0m[1m: method `test_connection` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/r2.rs:75:18[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m74[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mimpl R2Client {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m-------------[0m[0m [0m[0m[1m[38;5;12mmethod in this implementation[0m
+[0m[1m[38;5;12m75[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub async fn test_connection(&self) -> R2ConnectionResult {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                  [0m[0m[1m[33m^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `initialize_r2_client` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/r2.rs:90:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m90[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn initialize_r2_client(credentials: R2Credentials) -> Result<R2Client, String> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `upload_file` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/r2.rs:122:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m122[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn upload_file([0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `download_file` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/r2.rs:153:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m153[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn download_file([0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `delete_file` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/r2.rs:187:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m187[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn delete_file([0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `upload_file_from_path` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/r2.rs:211:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m211[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn upload_file_from_path([0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `download_file_to_path` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/r2.rs:231:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m231[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn download_file_to_path([0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: struct `MongoClient` is never constructed[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:45:12[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m45[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub struct MongoClient {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m            [0m[0m[1m[33m^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: methods `test_connection`, `close`, `albums_collection`, and `tracks_collection` are never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:61:18[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m59[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mimpl MongoClient {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m----------------[0m[0m [0m[0m[1m[38;5;12mmethods in this implementation[0m
+[0m[1m[38;5;12m60[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    // Test the MongoDB connection[0m
+[0m[1m[38;5;12m61[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub async fn test_connection(&self) -> DbResponse<()> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                  [0m[0m[1m[33m^^^^^^^^^^^^^^^[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m79[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub async fn close(self) {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m                  [0m[0m[1m[33m^^^^^[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m84[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub fn albums_collection(&self) -> Collection<Document> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m            [0m[0m[1m[33m^^^^^^^^^^^^^^^^^[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m88[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    pub fn tracks_collection(&self) -> Collection<Document> {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m            [0m[0m[1m[33m^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `initialize_mongo_client` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:94:14[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m94[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn initialize_mongo_client([0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `create_indexes` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:110:10[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m110[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0masync fn create_indexes(db: &Database) -> Result<(), Box<dyn Error + Send + Sync>> {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m          [0m[0m[1m[33m^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `create_album` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:151:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m151[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn create_album([0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `get_album` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:176:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m176[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn get_album(client: &Arc<MongoClient>, album_id: &str) -> DbResponse<Album> {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `update_album` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:210:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m210[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn update_album([0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `delete_album` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:254:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m254[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn delete_album(client: &Arc<MongoClient>, album_id: &str) -> DbResponse<()> {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `create_track` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:284:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m284[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn create_track([0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `get_track` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:309:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m309[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn get_track(client: &Arc<MongoClient>, track_id: &str) -> DbResponse<Track> {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `update_track` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:343:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m343[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn update_track([0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `delete_track` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:387:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m387[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn delete_track(client: &Arc<MongoClient>, track_id: &str) -> DbResponse<()> {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `search_tracks` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:417:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m417[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn search_tracks([0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `search_albums` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:464:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m464[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn search_albums([0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `get_tracks_by_album` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:512:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m512[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn get_tracks_by_album([0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `get_all_albums` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/storage/mongodb.rs:557:14[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m557[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub async fn get_all_albums(client: &Arc<MongoClient>) -> DbResponse<Vec<Album>> {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[33m^^^^^^^^^^^^^^[0m
+
+[1m[33mwarning[0m[1m:[0m `app` (bin "app") generated 59 warnings (run `cargo fix --bin "app"` to apply 22 suggestions)
+[1m[32m    Finished[0m ]8;;https://doc.rust-lang.org/cargo/reference/profiles.html#default-profiles\`dev` profile [unoptimized + debuginfo]]8;;\ target(s) in 0.42s
+[1m[32m     Running[0m `target/debug/app`
+[2025-04-01][05:16:16][tao::platform_impl::platform::app_delegate][TRACE] Triggered `applicationDidFinishLaunching`
+[2025-04-01][05:16:16][tao::platform_impl::platform::window][TRACE] Creating new window
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Triggered `viewDidMoveToWindow`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Completed `viewDidMoveToWindow`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Triggered `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Completed `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Triggered `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Completed `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Triggered `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Completed `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Triggered `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Completed `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Triggered `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Completed `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::window][TRACE] Locked shared state in `set_fullscreen`
+[2025-04-01][05:16:16][tao::platform_impl::platform::window][TRACE] Unlocked shared state in `set_fullscreen`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Triggered `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Completed `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Triggered `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Completed `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Triggered `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Completed `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Triggered `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Completed `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Triggered `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Completed `validAttributesForMarkedText`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Triggered `viewDidMoveToWindow`
+[2025-04-01][05:16:16][tao::platform_impl::platform::view][TRACE] Completed `viewDidMoveToWindow`
+[2025-04-01][05:16:16][tao::platform_impl::platform::app_delegate][TRACE] Completed `applicationDidFinishLaunching`
+[2025-04-01][05:16:16][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidBecomeKey:`
+[2025-04-01][05:16:16][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidBecomeKey:`
+[2025-04-01][05:16:18][app][INFO] Retrieving R2 credentials from keychain
+[2025-04-01][05:16:18][keyring][DEBUG] creating entry with service com.musiclibrarymanager.r2, user r2_credentials, and no target
+[2025-04-01][05:16:18][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:16:18][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:16:18][app][ERROR] Failed to get R2 credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:16:18][app][INFO] Using development fallback for retrieving R2 credentials after keychain error
+[2025-04-01][05:16:18][app][INFO] Loaded development credentials from file
+[2025-04-01][05:16:18][app][INFO] Creating new R2 client with account ID: fc7f96c85d2b8573b49ae862fbb07fcb and access key: 2fc32903a0881fedaf826e26e60c6da5
+[2025-04-01][05:16:18][app][INFO] Testing R2 connection
+[2025-04-01][05:16:18][app][INFO] R2 connection test successful
+[2025-04-01][05:16:19][app][INFO] Retrieving MongoDB credentials from keychain
+[2025-04-01][05:16:19][keyring][DEBUG] creating entry with service com.musiclibrarymanager.mongo, user mongo_credentials, and no target
+[2025-04-01][05:16:19][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:16:19][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:16:19][app][ERROR] Failed to get MongoDB credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:16:19][app][INFO] R2 client already initialized, reusing existing client
+[2025-04-01][05:16:19][app][INFO] Using development fallback for retrieving MongoDB credentials after keychain error
+[2025-04-01][05:16:19][app][INFO] Loaded development credentials from file
+[2025-04-01][05:16:19][app][INFO] Retrieving R2 credentials from keychain
+[2025-04-01][05:16:19][keyring][DEBUG] creating entry with service com.musiclibrarymanager.r2, user r2_credentials, and no target
+[2025-04-01][05:16:19][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:16:19][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:16:19][app][ERROR] Failed to get R2 credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:16:19][app][INFO] Using development fallback for retrieving R2 credentials after keychain error
+[2025-04-01][05:16:19][app][INFO] Loaded development credentials from file
+[2025-04-01][05:16:25][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:16:25][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:16:25][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:16:25][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:16:25][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:16:25][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:16:25][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:16:25][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:16:25][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:16:25][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:16:25][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:16:25][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:16:25][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:16:25][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:27][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:16:28][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+10:16:30 PM [vite] (ssr) page reload src/lib/paraglide/server.js
+[2025-04-01][05:16:30][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResignKey:`
+[2025-04-01][05:16:30][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResignKey:`
+10:16:30 PM [vite] (client) page reload src/lib/paraglide/runtime.js
+10:16:30 PM [vite] (ssr) page reload src/lib/paraglide/runtime.js
+[2025-04-01][05:16:30][app][INFO] Retrieving MongoDB credentials from keychain
+[2025-04-01][05:16:30][keyring][DEBUG] creating entry with service com.musiclibrarymanager.mongo, user mongo_credentials, and no target
+[2025-04-01][05:16:30][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:16:30][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:16:30][app][ERROR] Failed to get MongoDB credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:16:30][app][INFO] Using development fallback for retrieving MongoDB credentials after keychain error
+[2025-04-01][05:16:30][app][INFO] Loaded development credentials from file
+[2025-04-01][05:16:30][app][INFO] R2 client already initialized, reusing existing client
+[2025-04-01][05:16:30][app][INFO] Retrieving R2 credentials from keychain
+[2025-04-01][05:16:30][keyring][DEBUG] creating entry with service com.musiclibrarymanager.r2, user r2_credentials, and no target
+[2025-04-01][05:16:30][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:16:30][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:16:30][app][ERROR] Failed to get R2 credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:16:30][app][INFO] Using development fallback for retrieving R2 credentials after keychain error
+[2025-04-01][05:16:30][app][INFO] Loaded development credentials from file
+[2025-04-01][05:16:32][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidBecomeKey:`
+[2025-04-01][05:16:32][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidBecomeKey:`
+[2025-04-01][05:16:37][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResignKey:`
+[2025-04-01][05:16:37][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResignKey:`
+10:17:16 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/0.js
+10:17:16 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/1.js
+10:17:16 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/2.js
+10:17:16 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/3.js
+10:17:16 PM [vite] (client) page reload .svelte-kit/generated/client/app.js
+10:17:16 PM [vite] (client) page reload .svelte-kit/generated/client/matchers.js
+10:17:16 PM [vite] (ssr) page reload .svelte-kit/generated/server/internal.js
+10:17:16 PM [vite] (client) page reload .svelte-kit/generated/root.js
+10:17:16 PM [vite] (ssr) page reload .svelte-kit/generated/root.js
+[2025-04-01][05:17:16][app][INFO] Retrieving MongoDB credentials from keychain
+[2025-04-01][05:17:16][keyring][DEBUG] creating entry with service com.musiclibrarymanager.mongo, user mongo_credentials, and no target
+[2025-04-01][05:17:16][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:16][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:16][app][ERROR] Failed to get MongoDB credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:17:16][app][INFO] Using development fallback for retrieving MongoDB credentials after keychain error
+[2025-04-01][05:17:16][app][INFO] Loaded development credentials from file
+[2025-04-01][05:17:16][app][INFO] R2 client already initialized, reusing existing client
+[2025-04-01][05:17:16][app][INFO] Retrieving R2 credentials from keychain
+[2025-04-01][05:17:16][keyring][DEBUG] creating entry with service com.musiclibrarymanager.r2, user r2_credentials, and no target
+[2025-04-01][05:17:16][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:16][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:16][app][ERROR] Failed to get R2 credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:17:16][app][INFO] Using development fallback for retrieving R2 credentials after keychain error
+[2025-04-01][05:17:16][app][INFO] Loaded development credentials from file
+10:17:16 PM [vite] (ssr) page reload src/lib/paraglide/server.js
+10:17:16 PM [vite] (client) page reload src/lib/paraglide/runtime.js
+10:17:16 PM [vite] (ssr) page reload src/lib/paraglide/runtime.js
+10:17:16 PM [vite] (ssr) page reload src/lib/paraglide/server.js
+10:17:16 PM [vite] (client) page reload src/lib/paraglide/runtime.js
+10:17:16 PM [vite] (ssr) page reload src/lib/paraglide/runtime.js
+10:17:16 PM [vite] (ssr) page reload src/lib/paraglide/server.js
+[2025-04-01][05:17:16][app][INFO] Retrieving MongoDB credentials from keychain
+[2025-04-01][05:17:16][keyring][DEBUG] creating entry with service com.musiclibrarymanager.mongo, user mongo_credentials, and no target
+[2025-04-01][05:17:16][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:16][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:16][app][ERROR] Failed to get MongoDB credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:17:16][app][INFO] Using development fallback for retrieving MongoDB credentials after keychain error
+[2025-04-01][05:17:16][app][INFO] Loaded development credentials from file
+[2025-04-01][05:17:16][app][INFO] R2 client already initialized, reusing existing client
+[2025-04-01][05:17:16][app][INFO] Retrieving R2 credentials from keychain
+[2025-04-01][05:17:16][keyring][DEBUG] creating entry with service com.musiclibrarymanager.r2, user r2_credentials, and no target
+[2025-04-01][05:17:16][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:16][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:16][app][ERROR] Failed to get R2 credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:17:16][app][INFO] Using development fallback for retrieving R2 credentials after keychain error
+[2025-04-01][05:17:16][app][INFO] Loaded development credentials from file
+10:17:31 PM [vite] (ssr) page reload src/lib/paraglide/server.js
+10:17:31 PM [vite] (client) page reload src/lib/paraglide/runtime.js
+10:17:31 PM [vite] (ssr) page reload src/lib/paraglide/runtime.js
+[2025-04-01][05:17:31][app][INFO] Retrieving MongoDB credentials from keychain
+[2025-04-01][05:17:31][keyring][DEBUG] creating entry with service com.musiclibrarymanager.mongo, user mongo_credentials, and no target
+[2025-04-01][05:17:31][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:31][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:31][app][ERROR] Failed to get MongoDB credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:17:31][app][INFO] Using development fallback for retrieving MongoDB credentials after keychain error
+[2025-04-01][05:17:31][app][INFO] Loaded development credentials from file
+[2025-04-01][05:17:31][app][INFO] R2 client already initialized, reusing existing client
+[2025-04-01][05:17:31][app][INFO] Retrieving R2 credentials from keychain
+[2025-04-01][05:17:31][keyring][DEBUG] creating entry with service com.musiclibrarymanager.r2, user r2_credentials, and no target
+[2025-04-01][05:17:31][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:31][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:31][app][ERROR] Failed to get R2 credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:17:31][app][INFO] Using development fallback for retrieving R2 credentials after keychain error
+[2025-04-01][05:17:31][app][INFO] Loaded development credentials from file
+10:17:34 PM [vite] (client) page reload src-tauri/dev_credentials.json
+10:17:34 PM [vite] (ssr) page reload src-tauri/dev_credentials.json
+[2025-04-01][05:17:34][app][INFO] Retrieving MongoDB credentials from keychain
+[2025-04-01][05:17:34][keyring][DEBUG] creating entry with service com.musiclibrarymanager.mongo, user mongo_credentials, and no target
+[2025-04-01][05:17:34][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:34][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:34][app][ERROR] Failed to get MongoDB credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:17:34][app][INFO] Using development fallback for retrieving MongoDB credentials after keychain error
+[2025-04-01][05:17:34][app][INFO] Loaded development credentials from file
+[2025-04-01][05:17:34][app][INFO] R2 client already initialized, reusing existing client
+[2025-04-01][05:17:34][app][INFO] Retrieving R2 credentials from keychain
+[2025-04-01][05:17:34][keyring][DEBUG] creating entry with service com.musiclibrarymanager.r2, user r2_credentials, and no target
+[2025-04-01][05:17:34][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:34][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:34][app][ERROR] Failed to get R2 credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:17:34][app][INFO] Using development fallback for retrieving R2 credentials after keychain error
+[2025-04-01][05:17:34][app][INFO] Loaded development credentials from file
+10:17:51 PM [vite] (client) page reload src-tauri/src/main.rs
+10:17:51 PM [vite] (ssr) page reload src-tauri/src/main.rs
+[2025-04-01][05:17:51][app][INFO] Retrieving MongoDB credentials from keychain
+[2025-04-01][05:17:51][keyring][DEBUG] creating entry with service com.musiclibrarymanager.mongo, user mongo_credentials, and no target
+[2025-04-01][05:17:51][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:51][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:51][app][ERROR] Failed to get MongoDB credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:17:51][app][INFO] Using development fallback for retrieving MongoDB credentials after keychain error
+[2025-04-01][05:17:51][app][INFO] Loaded development credentials from file
+[2025-04-01][05:17:51][app][INFO] R2 client already initialized, reusing existing client
+[2025-04-01][05:17:51][app][INFO] Retrieving R2 credentials from keychain
+[2025-04-01][05:17:51][keyring][DEBUG] creating entry with service com.musiclibrarymanager.r2, user r2_credentials, and no target
+[2025-04-01][05:17:51][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:51][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:17:51][app][ERROR] Failed to get R2 credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:17:51][app][INFO] Using development fallback for retrieving R2 credentials after keychain error
+[2025-04-01][05:17:51][app][INFO] Loaded development credentials from file
+10:18:03 PM [vite] (client) page reload src-tauri/dev_credentials.json
+10:18:03 PM [vite] (ssr) page reload src-tauri/dev_credentials.json
+[2025-04-01][05:18:03][app][INFO] Retrieving MongoDB credentials from keychain
+[2025-04-01][05:18:03][keyring][DEBUG] creating entry with service com.musiclibrarymanager.mongo, user mongo_credentials, and no target
+[2025-04-01][05:18:03][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:03][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:03][app][ERROR] Failed to get MongoDB credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:18:03][app][INFO] Using development fallback for retrieving MongoDB credentials after keychain error
+[2025-04-01][05:18:03][app][INFO] R2 client already initialized, reusing existing client
+[2025-04-01][05:18:03][app][INFO] Loaded development credentials from file
+[2025-04-01][05:18:03][app][INFO] Retrieving R2 credentials from keychain
+[2025-04-01][05:18:03][keyring][DEBUG] creating entry with service com.musiclibrarymanager.r2, user r2_credentials, and no target
+[2025-04-01][05:18:03][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:03][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:03][app][ERROR] Failed to get R2 credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:18:03][app][INFO] Using development fallback for retrieving R2 credentials after keychain error
+[2025-04-01][05:18:03][app][INFO] Loaded development credentials from file
+10:18:25 PM [vite] (client) page reload src-tauri/dev_credentials.json
+10:18:25 PM [vite] (ssr) page reload src-tauri/dev_credentials.json
+[2025-04-01][05:18:25][app][INFO] Retrieving MongoDB credentials from keychain
+[2025-04-01][05:18:25][keyring][DEBUG] creating entry with service com.musiclibrarymanager.mongo, user mongo_credentials, and no target
+[2025-04-01][05:18:25][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:25][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:25][app][INFO] R2 client already initialized, reusing existing client
+[2025-04-01][05:18:25][app][ERROR] Failed to get MongoDB credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:18:25][app][INFO] Using development fallback for retrieving MongoDB credentials after keychain error
+[2025-04-01][05:18:25][app][INFO] Loaded development credentials from file
+[2025-04-01][05:18:25][app][INFO] Retrieving R2 credentials from keychain
+[2025-04-01][05:18:25][keyring][DEBUG] creating entry with service com.musiclibrarymanager.r2, user r2_credentials, and no target
+[2025-04-01][05:18:25][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:25][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:25][app][ERROR] Failed to get R2 credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:18:25][app][INFO] Using development fallback for retrieving R2 credentials after keychain error
+[2025-04-01][05:18:25][app][INFO] Loaded development credentials from file
+10:18:30 PM [vite] (client) page reload src-tauri/dev_credentials.json
+10:18:30 PM [vite] (ssr) page reload src-tauri/dev_credentials.json
+[2025-04-01][05:18:30][app][INFO] Retrieving MongoDB credentials from keychain
+[2025-04-01][05:18:30][keyring][DEBUG] creating entry with service com.musiclibrarymanager.mongo, user mongo_credentials, and no target
+[2025-04-01][05:18:30][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:30][app][INFO] R2 client already initialized, reusing existing client
+[2025-04-01][05:18:30][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:30][app][ERROR] Failed to get MongoDB credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:18:30][app][INFO] Using development fallback for retrieving MongoDB credentials after keychain error
+[2025-04-01][05:18:30][app][INFO] Loaded development credentials from file
+[2025-04-01][05:18:30][app][INFO] Retrieving R2 credentials from keychain
+[2025-04-01][05:18:30][keyring][DEBUG] creating entry with service com.musiclibrarymanager.r2, user r2_credentials, and no target
+[2025-04-01][05:18:30][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:30][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:30][app][ERROR] Failed to get R2 credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:18:30][app][INFO] Using development fallback for retrieving R2 credentials after keychain error
+[2025-04-01][05:18:30][app][INFO] Loaded development credentials from file
+10:18:32 PM [vite] (client) page reload src-tauri/dev_credentials.json
+10:18:32 PM [vite] (ssr) page reload src-tauri/dev_credentials.json
+[2025-04-01][05:18:32][app][INFO] Retrieving MongoDB credentials from keychain
+[2025-04-01][05:18:32][keyring][DEBUG] creating entry with service com.musiclibrarymanager.mongo, user mongo_credentials, and no target
+[2025-04-01][05:18:32][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:32][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:32][app][ERROR] Failed to get MongoDB credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:18:32][app][INFO] Using development fallback for retrieving MongoDB credentials after keychain error
+[2025-04-01][05:18:32][app][INFO] Loaded development credentials from file
+[2025-04-01][05:18:32][app][INFO] R2 client already initialized, reusing existing client
+[2025-04-01][05:18:32][app][INFO] Retrieving R2 credentials from keychain
+[2025-04-01][05:18:32][keyring][DEBUG] creating entry with service com.musiclibrarymanager.r2, user r2_credentials, and no target
+[2025-04-01][05:18:32][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:32][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:32][app][ERROR] Failed to get R2 credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:18:32][app][INFO] Using development fallback for retrieving R2 credentials after keychain error
+[2025-04-01][05:18:32][app][INFO] Loaded development credentials from file
+10:18:49 PM [vite] (client) page reload src-tauri/dev_credentials.json
+10:18:49 PM [vite] (ssr) page reload src-tauri/dev_credentials.json
+10:18:49 PM [vite] (client) page reload src-tauri/dev_credentials.json
+10:18:49 PM [vite] (ssr) page reload src-tauri/dev_credentials.json
+[2025-04-01][05:18:50][app][INFO] Retrieving MongoDB credentials from keychain
+[2025-04-01][05:18:50][keyring][DEBUG] creating entry with service com.musiclibrarymanager.mongo, user mongo_credentials, and no target
+[2025-04-01][05:18:50][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:50][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:50][app][ERROR] Failed to get MongoDB credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:18:50][app][INFO] Using development fallback for retrieving MongoDB credentials after keychain error
+[2025-04-01][05:18:50][app][INFO] Loaded development credentials from file
+[2025-04-01][05:18:50][app][INFO] R2 client already initialized, reusing existing client
+[2025-04-01][05:18:50][app][INFO] Retrieving R2 credentials from keychain
+[2025-04-01][05:18:50][keyring][DEBUG] creating entry with service com.musiclibrarymanager.r2, user r2_credentials, and no target
+[2025-04-01][05:18:50][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:50][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:18:50][app][ERROR] Failed to get R2 credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:18:50][app][INFO] Using development fallback for retrieving R2 credentials after keychain error
+[2025-04-01][05:18:50][app][INFO] Loaded development credentials from file
+10:24:56 PM [vite-plugin-svelte] src/lib/components/FileUploader.svelte:71:2 `<div>` with a dragover, dragleave or drop handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+10:24:56 PM [vite-plugin-svelte] src/lib/components/FileUploader.svelte:71:2 `<div>` with a dragover, dragleave or drop handler must have an ARIA role
+https://svelte.dev/e/a11y_no_static_element_interactions
+[2025-04-01][05:25:40][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidBecomeKey:`
+[2025-04-01][05:25:40][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidBecomeKey:`
+[2025-04-01][05:25:47][app][INFO] R2 client already initialized, reusing existing client
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResignKey:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResignKey:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:48][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:49][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:49][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:49][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:49][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:49][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:49][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:49][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:49][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:25:49][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:25:49][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][app][INFO] Selected valid audio file: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/She Lived Right Around Here Master.wav
+[2025-04-01][05:26:00][app][INFO] Selected valid audio file: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/Something To Crow About Master.wav
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidBecomeKey:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidBecomeKey:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidMove:`
+[2025-04-01][05:26:00][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidMove:`
+[2025-04-01][05:26:00][app][INFO] Getting file stats for: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/She Lived Right Around Here Master.wav
+[2025-04-01][05:26:00][app][INFO] Getting file stats for: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/Something To Crow About Master.wav
+[2025-04-01][05:26:00][app][INFO] Extracting metadata from 2 files
+[2025-04-01][05:26:00][app::audio::metadata][INFO] Extracting metadata from: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/She Lived Right Around Here Master.wav
+[2025-04-01][05:26:00][symphonia_core::probe][DEBUG] found a possible format marker within [52, 49, 46, 46, da, 68, 19, 2, 57, 41, 56, 45, 4a, 55, 4e, 4b] @ 0+2 bytes.
+[2025-04-01][05:26:00][symphonia_core::probe][INFO] found the format marker [52, 49, 46, 46] @ 0+2 bytes.
+[2025-04-01][05:26:00][symphonia_format_riff::common][INFO] ignoring unknown chunk: tag=JUNK, len=64.
+[2025-04-01][05:26:00][app::audio::metadata][INFO] Extracting metadata from: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/Something To Crow About Master.wav
+[2025-04-01][05:26:00][symphonia_core::probe][DEBUG] found a possible format marker within [52, 49, 46, 46, 40, 68, 37, 2, 57, 41, 56, 45, 4a, 55, 4e, 4b] @ 0+2 bytes.
+[2025-04-01][05:26:00][symphonia_core::probe][INFO] found the format marker [52, 49, 46, 46] @ 0+2 bytes.
+[2025-04-01][05:26:00][symphonia_format_riff::common][INFO] ignoring unknown chunk: tag=JUNK, len=64.
+[2025-04-01][05:26:02][app][INFO] Batch transcoding 2 audio files
+[2025-04-01][05:26:02][app][INFO] DEBUG: Input validation completed successfully
+[2025-04-01][05:26:02][app][INFO] Using system temp directory for output: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:02][app][INFO] Using absolute output directory: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:02][app][INFO] DEBUG: Absolute output directory determined: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:02][app][INFO] DEBUG: Output directory created successfully
+[2025-04-01][05:26:02][app][INFO] Output directory is writable
+[2025-04-01][05:26:02][app][INFO] DEBUG: Test file removed successfully
+[2025-04-01][05:26:02][app][INFO] DEBUG: Output directory verified as writable
+[2025-04-01][05:26:02][app][INFO] Transcoding with options: bitrate=128k, format=mp3, output_dir=/var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:02][app][INFO] Processing file 1/2: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/She Lived Right Around Here Master.wav
+[2025-04-01][05:26:02][app][INFO] DEBUG: File exists, proceeding with transcoding: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/She Lived Right Around Here Master.wav
+[2025-04-01][05:26:02][app][INFO] DEBUG: Beginning transcode_file call for: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/She Lived Right Around Here Master.wav
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Starting transcoding process for file: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/She Lived Right Around Here Master.wav
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] DEBUG: Using options: bitrate=128, format=mp3, output_dir=/var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] FFmpeg check passed
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Checking format: mp3
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Format check passed for: mp3
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Input file exists: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/She Lived Right Around Here Master.wav
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Input file size: 35219682 bytes
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] DEBUG: Input file validation passed
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] DEBUG: Resolved output directory: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Creating output directory: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Output directory created or already exists: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Output directory is writable
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] DEBUG: Test file removed successfully
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] DEBUG: Output directory validation passed
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Got file stem: She Lived Right Around Here Master
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] DEBUG: Sanitized file stem: She_Lived_Right_Around_Here_Master
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Medium quality output path (from absolute dir): /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded/She_Lived_Right_Around_Here_Master_medium.mp3
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Final medium quality output path: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded/She_Lived_Right_Around_Here_Master_medium.mp3
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] DEBUG: Ensuring parent directory exists: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] DEBUG: Parent directory created or already exists
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Transcoding file: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/She Lived Right Around Here Master.wav to medium quality at 128 kbps
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] DEBUG: [transcode_internal] Starting transcoding process
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Input absolute path: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/She Lived Right Around Here Master.wav
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Output directory is writable: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] DEBUG: [transcode_internal] Test file removed successfully
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] DEBUG: [transcode_internal] Output directory validated
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Found ffmpeg at: /opt/homebrew/bin/ffmpeg
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Using ffmpeg at path: /opt/homebrew/bin/ffmpeg
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] DEBUG: [transcode_internal] FFmpeg validated at: /opt/homebrew/bin/ffmpeg
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Created temporary directory for output: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/.tmp8P7dZ4
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Using temporary output file: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/.tmp8P7dZ4/temp_output.mp3
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Using mp3 codec with bitrate 128k
+[2025-04-01][05:26:02][app::audio::transcoding][INFO] Running ffmpeg command: "/opt/homebrew/bin/ffmpeg" "-i" "/Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/She Lived Right Around Here Master.wav" "-codec:a" "libmp3lame" "-b:a" "128k" "-y" "-map_metadata" "0" "-nostdin" "-threads" "4" "-loglevel" "info" "/var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/.tmp8P7dZ4/temp_output.mp3"
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] FFmpeg command executed successfully
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Temporary output file size: 1958057 bytes
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: [transcode_internal] FFmpeg transcoding completed successfully, copying from temp to final location
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Copied 1958057 bytes from temp to output location
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Temporary directory cleaned up successfully
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Final output file size: 1958057 bytes
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Output file exists and is valid: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded/She_Lived_Right_Around_Here_Master_medium.mp3
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: [transcode_internal] Transcoding process completed successfully
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Successfully transcoded file to: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded/She_Lived_Right_Around_Here_Master_medium.mp3
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: Output file verified: 1958057 bytes
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: Returning successful TranscodingResult
+[2025-04-01][05:26:04][app][INFO] Successfully transcoded file 1: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/She Lived Right Around Here Master.wav
+[2025-04-01][05:26:04][app][INFO] Processing file 2/2: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/Something To Crow About Master.wav
+[2025-04-01][05:26:04][app][INFO] DEBUG: File exists, proceeding with transcoding: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/Something To Crow About Master.wav
+[2025-04-01][05:26:04][app][INFO] DEBUG: Beginning transcode_file call for: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/Something To Crow About Master.wav
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Starting transcoding process for file: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/Something To Crow About Master.wav
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: Using options: bitrate=128, format=mp3, output_dir=/var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] FFmpeg check passed
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Checking format: mp3
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Format check passed for: mp3
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Input file exists: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/Something To Crow About Master.wav
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Input file size: 37185608 bytes
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: Input file validation passed
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: Resolved output directory: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Creating output directory: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Output directory created or already exists: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Output directory is writable
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: Test file removed successfully
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: Output directory validation passed
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Got file stem: Something To Crow About Master
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: Sanitized file stem: Something_To_Crow_About_Master
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Medium quality output path (from absolute dir): /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded/Something_To_Crow_About_Master_medium.mp3
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Final medium quality output path: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded/Something_To_Crow_About_Master_medium.mp3
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: Ensuring parent directory exists: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: Parent directory created or already exists
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Transcoding file: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/Something To Crow About Master.wav to medium quality at 128 kbps
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: [transcode_internal] Starting transcoding process
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Input absolute path: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/Something To Crow About Master.wav
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Output directory is writable: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: [transcode_internal] Test file removed successfully
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: [transcode_internal] Output directory validated
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Found ffmpeg at: /opt/homebrew/bin/ffmpeg
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Using ffmpeg at path: /opt/homebrew/bin/ffmpeg
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] DEBUG: [transcode_internal] FFmpeg validated at: /opt/homebrew/bin/ffmpeg
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Created temporary directory for output: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/.tmpg2Xb2B
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Using temporary output file: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/.tmpg2Xb2B/temp_output.mp3
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Using mp3 codec with bitrate 128k
+[2025-04-01][05:26:04][app::audio::transcoding][INFO] Running ffmpeg command: "/opt/homebrew/bin/ffmpeg" "-i" "/Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/Something To Crow About Master.wav" "-codec:a" "libmp3lame" "-b:a" "128k" "-y" "-map_metadata" "0" "-nostdin" "-threads" "4" "-loglevel" "info" "/var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/.tmpg2Xb2B/temp_output.mp3"
+[2025-04-01][05:26:06][app::audio::transcoding][INFO] FFmpeg command executed successfully
+[2025-04-01][05:26:06][app::audio::transcoding][INFO] Temporary output file size: 2067109 bytes
+[2025-04-01][05:26:06][app::audio::transcoding][INFO] DEBUG: [transcode_internal] FFmpeg transcoding completed successfully, copying from temp to final location
+[2025-04-01][05:26:06][app::audio::transcoding][INFO] Copied 2067109 bytes from temp to output location
+[2025-04-01][05:26:06][app::audio::transcoding][INFO] Temporary directory cleaned up successfully
+[2025-04-01][05:26:06][app::audio::transcoding][INFO] Final output file size: 2067109 bytes
+[2025-04-01][05:26:06][app::audio::transcoding][INFO] Output file exists and is valid: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded/Something_To_Crow_About_Master_medium.mp3
+[2025-04-01][05:26:06][app::audio::transcoding][INFO] DEBUG: [transcode_internal] Transcoding process completed successfully
+[2025-04-01][05:26:06][app::audio::transcoding][INFO] Successfully transcoded file to: /var/folders/zd/ytw6zmwj7sg34df11l90fr6c0000gn/T/music-library-transcoded/Something_To_Crow_About_Master_medium.mp3
+[2025-04-01][05:26:06][app::audio::transcoding][INFO] DEBUG: Output file verified: 2067109 bytes
+[2025-04-01][05:26:06][app::audio::transcoding][INFO] DEBUG: Returning successful TranscodingResult
+[2025-04-01][05:26:06][app][INFO] Successfully transcoded file 2: /Users/wizziwig/Library/CloudStorage/Dropbox/FordBurn/Mastered/Sixes and Sevens/Something To Crow About Master.wav
+[2025-04-01][05:26:06][app][INFO] Completed batch transcoding: 2 successful, 0 failed
+[2025-04-01][05:26:06][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:06][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:06][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:06][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:06][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:06][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:06][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:06][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowDidResize:`
+[2025-04-01][05:26:07][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowDidResize:`
+[2025-04-01][05:26:14][app][INFO] Retrieving MongoDB credentials from keychain
+[2025-04-01][05:26:14][keyring][DEBUG] creating entry with service com.musiclibrarymanager.mongo, user mongo_credentials, and no target
+[2025-04-01][05:26:14][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:26:14][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:26:14][app][ERROR] Failed to get MongoDB credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:26:14][app][INFO] Using development fallback for retrieving MongoDB credentials after keychain error
+[2025-04-01][05:26:14][app][INFO] Loaded development credentials from file
+[2025-04-01][05:26:14][app][INFO] Retrieving R2 credentials from keychain
+[2025-04-01][05:26:14][keyring][DEBUG] creating entry with service com.musiclibrarymanager.r2, user r2_credentials, and no target
+[2025-04-01][05:26:14][keyring][DEBUG] created entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:26:14][keyring][DEBUG] get password from entry MockCredential { inner: Mutex { data: RefCell { value: MockData { secret: None, error: None } }, poisoned: false, .. } }
+[2025-04-01][05:26:14][app][ERROR] Failed to get R2 credentials from keychain: No matching entry found in secure storage
+[2025-04-01][05:26:14][app][INFO] Using development fallback for retrieving R2 credentials after keychain error
+[2025-04-01][05:26:14][app][INFO] Loaded development credentials from file
+[2025-04-01][05:26:17][tao::platform_impl::platform::app_delegate][TRACE] Triggered `applicationWillTerminate`
+[2025-04-01][05:26:17][tao::platform_impl::platform::app_delegate][TRACE] Completed `applicationWillTerminate`
+[2025-04-01][05:26:17][tao::platform_impl::platform::window_delegate][TRACE] Triggered `windowWillClose:`
+[2025-04-01][05:26:17][tao::platform_impl::platform::window_delegate][TRACE] Completed `windowWillClose:`
+10:27:57 PM [vite] (client) hmr update /src/routes/upload/+page.svelte, /src/app.css
+10:27:57 PM [vite] (ssr) page reload src/routes/upload/+page.svelte
+10:27:57 PM [vite] (ssr) page reload src/routes/upload/+page.svelte
+10:28:01 PM [vite] (ssr) page reload src/routes/upload/+page.svelte
+10:28:14 PM [vite] (client) hmr update /src/routes/upload/+page.svelte, /src/app.css, /src/routes/upload/+page.svelte?svelte&type=style&lang.css
+10:28:14 PM [vite] (ssr) page reload src/routes/upload/+page.svelte
+10:28:33 PM [vite] (client) page reload src-tauri/src/main.rs
+10:28:33 PM [vite] (ssr) page reload src-tauri/src/main.rs
+10:29:49 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/0.js
+10:29:49 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/1.js
+10:29:49 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/2.js
+10:29:49 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/3.js
+10:29:49 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/4.js
+10:29:49 PM [vite] (client) page reload .svelte-kit/generated/client/app.js
+10:29:49 PM [vite] (client) page reload .svelte-kit/generated/client/matchers.js
+10:29:49 PM [vite] (ssr) page reload .svelte-kit/generated/server/internal.js
+10:29:49 PM [vite] (client) page reload .svelte-kit/generated/root.js
+10:29:49 PM [vite] (ssr) page reload .svelte-kit/generated/root.js
+10:29:49 PM [vite] (ssr) page reload src/lib/paraglide/server.js
+10:29:49 PM [vite] (client) page reload src/lib/paraglide/runtime.js
+10:29:49 PM [vite] (ssr) page reload src/lib/paraglide/runtime.js
+10:29:49 PM [vite] (ssr) page reload src/lib/paraglide/server.js
+10:29:49 PM [vite] (client) page reload src/lib/paraglide/runtime.js
+10:29:49 PM [vite] (ssr) page reload src/lib/paraglide/runtime.js
+10:29:57 PM [vite] (client) page reload src-tauri/dev_credentials.json
+10:29:57 PM [vite] (ssr) page reload src-tauri/dev_credentials.json
+10:30:08 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/0.js
+10:30:08 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/1.js
+10:30:08 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/2.js
+10:30:08 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/3.js
+10:30:08 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/4.js
+10:30:08 PM [vite] (client) page reload .svelte-kit/generated/client/app.js
+10:30:08 PM [vite] (client) page reload .svelte-kit/generated/client/matchers.js
+10:30:08 PM [vite] (ssr) page reload .svelte-kit/generated/server/internal.js
+10:30:08 PM [vite] (client) page reload .svelte-kit/generated/root.js
+10:30:08 PM [vite] (ssr) page reload .svelte-kit/generated/root.js
+10:30:08 PM [vite] (client) page reload src/lib/paraglide/runtime.js
+10:30:08 PM [vite] (ssr) page reload src/lib/paraglide/runtime.js
+10:30:08 PM [vite] (ssr) page reload src/lib/paraglide/server.js
+10:30:08 PM [vite] (ssr) page reload src/lib/paraglide/server.js
+10:30:08 PM [vite] (client) page reload src/lib/paraglide/runtime.js
+10:30:08 PM [vite] (ssr) page reload src/lib/paraglide/runtime.js
+10:30:09 PM [vite] (client) page reload src/lib/paraglide/runtime.js
+10:30:09 PM [vite] (ssr) page reload src/lib/paraglide/runtime.js
+10:30:09 PM [vite] (ssr) page reload src/lib/paraglide/server.js
+10:30:26 PM [vite] (client) page reload src-tauri/dev_credentials.json
+10:30:26 PM [vite] (ssr) page reload src-tauri/dev_credentials.json
+10:30:46 PM [vite] (ssr) page reload src/lib/paraglide/server.js
+10:30:46 PM [vite] (client) page reload src/lib/paraglide/runtime.js
+10:30:46 PM [vite] (ssr) page reload src/lib/paraglide/runtime.js
+10:31:24 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/0.js
+10:31:24 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/1.js
+10:31:24 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/2.js
+10:31:24 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/3.js
+10:31:24 PM [vite] (client) page reload .svelte-kit/generated/client/nodes/4.js
+10:31:24 PM [vite] (client) page reload .svelte-kit/generated/client/app.js
+10:31:24 PM [vite] (client) page reload .svelte-kit/generated/client/matchers.js
+10:31:24 PM [vite] (ssr) page reload .svelte-kit/generated/server/internal.js
+10:31:24 PM [vite] (client) page reload .svelte-kit/generated/root.js
+10:31:24 PM [vite] (ssr) page reload .svelte-kit/generated/root.js
+10:31:24 PM [vite] (client) page reload src/lib/paraglide/runtime.js
+10:31:24 PM [vite] (ssr) page reload src/lib/paraglide/runtime.js
+10:31:24 PM [vite] (ssr) page reload src/lib/paraglide/server.js
+10:31:25 PM [vite] (client) page reload src/lib/paraglide/runtime.js
+10:31:25 PM [vite] (ssr) page reload src/lib/paraglide/runtime.js
+10:31:25 PM [vite] (ssr) page reload src/lib/paraglide/server.js

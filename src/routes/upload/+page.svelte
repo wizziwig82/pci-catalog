@@ -12,11 +12,43 @@
     output_format: string;
     bitrate: number;
   }
+
+  interface Track {
+    title: string;
+    album_id: string;
+    genre: string[];
+    duration: number;
+    original_path: string;
+    writers: string[];
+    writer_percentages: number[];
+    publishers: string[];
+    publisher_percentages: number[];
+    instruments: string[];
+    mood: string[];
+    comments: string;
+    // Add other track fields as needed
+  }
+
+  interface Album {
+    name: string;
+    artist: string;
+    // Add other album fields as needed
+  }
+
+  interface ExtractedMetadata {
+    track: Track;
+    album: Album;
+    fileInfo: {
+      path: string;
+      size: number;
+      // Add other file info fields as needed
+    };
+  }
   
   // Store for selected files
   let selectedFiles: File[] = [];
   // Store for extracted metadata
-  let extractedMetadata: any[] = [];
+  let extractedMetadata: ExtractedMetadata[] = [];
   // Store for file paths
   let selectedFilePaths: string[] = [];
   // Loading state
@@ -39,6 +71,25 @@
   
   // Add mongoStatus variable at the top of the script section
   let mongoStatus = '';
+
+  // Metadata editing state
+  let isEditingMetadata = false;
+  let selectedTrackIndex = -1;
+  let bulkEditMode = false;
+  let selectedTrackIndices: number[] = [];
+  
+  // Fields for bulk editing
+  let bulkEditFields = {
+    genre: "",
+    writers: "",
+    publishers: "",
+    instruments: "",
+    mood: ""
+  };
+
+  // Writer and publisher percentages validation
+  let writerPercentagesValid = true;
+  let publisherPercentagesValid = true;
   
   // Handle file selection event from the FileUploader component
   async function handleFilesSelected(event: CustomEvent<{ files: File[] }>) {
@@ -203,46 +254,292 @@
         console.warn(`Mismatch between metadata (${filteredMetadata.length}) and transcoded files (${successfulTranscodes.length})`);
       }
       
-      // Call the Tauri command to upload the files
-      const uploadResult = await invoke<{
-        success: boolean;
-        message: string;
-        uploaded_tracks: any[];
-        failed_tracks: any[];
-      }>('upload_transcoded_tracks', {
-        transcodingResults: successfulTranscodes,
-        audioMetadataList: filteredMetadata,
-        pathConfig: {
-          original_prefix: 'tracks/original',
-          medium_prefix: 'tracks/medium',
-          album_art_prefix: 'albums/artwork'
+      // Process metadata into the format expected by the backend
+      const processedMetadata = filteredMetadata.map(metadata => {
+        const processed = JSON.parse(JSON.stringify(metadata));
+        
+        // Ensure all required fields exist with valid data
+        if (!processed.track.writers) {
+          processed.track.writers = {};
+        } else if (Array.isArray(processed.track.writers)) {
+          // Convert array to object with equal shares
+          const writerObj: Record<string, number> = {};
+          processed.track.writers.forEach((writer: string) => {
+            writerObj[writer] = Math.floor(100 / processed.track.writers.length);
+          });
+          processed.track.writers = writerObj;
         }
+        
+        if (!processed.track.publishers) {
+          processed.track.publishers = {};
+        } else if (Array.isArray(processed.track.publishers)) {
+          // Convert array to object with equal shares
+          const publisherObj: Record<string, number> = {};
+          processed.track.publishers.forEach((publisher: string) => {
+            publisherObj[publisher] = Math.floor(100 / processed.track.publishers.length);
+          });
+          processed.track.publishers = publisherObj;
+        }
+        
+        // Ensure genre is always an array
+        if (processed.track.genre && !Array.isArray(processed.track.genre)) {
+          processed.track.genre = [processed.track.genre];
+        } else if (!processed.track.genre || processed.track.genre.length === 0) {
+          processed.track.genre = ["Unclassified"];
+        }
+        
+        // Make sure instruments is available at the top level since MongoDB expects it
+        if (!processed.track.instruments) {
+          processed.track.instruments = [];
+        }
+        
+        // Make sure mood is available at the top level
+        if (!processed.track.mood) {
+          processed.track.mood = [];
+        }
+        
+        // Add comments to custom_metadata if it exists
+        if (processed.track.comments) {
+          processed.track.custom_metadata = processed.track.custom_metadata || {};
+          processed.track.custom_metadata.comments = processed.track.comments;
+          delete processed.track.comments;
+        }
+        
+        return processed;
       });
       
-      console.log('Upload result:', uploadResult);
+      // Upload files one by one with delay
+      console.log('Starting sequential upload process...');
       
-      if (uploadResult.uploaded_tracks) {
-        uploadedFiles = uploadResult.uploaded_tracks;
-      }
+      const uploadedTracks: any[] = [];
+      const failedTracks: any[] = [];
+      let currentIndex = 0;
       
-      if (uploadResult.failed_tracks) {
-        failedUploads = uploadResult.failed_tracks;
-      }
-      
-      if (uploadResult.message) {
-        if (!uploadResult.success) {
-          error = uploadResult.message;
-        } else {
-          alert(uploadResult.message);
+      const uploadNextTrack = async () => {
+        if (currentIndex >= successfulTranscodes.length) {
+          // All tracks processed, show results
+          console.log('All tracks processed. Successes:', uploadedTracks.length, 'Failures:', failedTracks.length);
+          handleUploadResults({
+            success: failedTracks.length === 0,
+            message: failedTracks.length === 0 
+              ? `Successfully uploaded ${uploadedTracks.length} tracks` 
+              : `Uploaded ${uploadedTracks.length} tracks with ${failedTracks.length} failures`,
+            uploaded_tracks: uploadedTracks,
+            failed_tracks: failedTracks
+          });
+          return;
         }
-      }
+        
+        // Update progress
+        uploadProgress = Math.floor((currentIndex / successfulTranscodes.length) * 100);
+        
+        // Get current track and metadata
+        const currentTranscode = successfulTranscodes[currentIndex];
+        const currentMetadata = processedMetadata[currentIndex];
+        
+        try {
+          console.log(`Uploading track ${currentIndex + 1}/${successfulTranscodes.length}: ${currentTranscode.input_path}`);
+          
+          // Create a single-item array for this track's metadata
+          const singleItemArray = [currentMetadata];
+          
+          // Try to upload this single track
+          const result = await invoke<{
+            success: boolean;
+            message: string;
+            uploaded_tracks: any[];
+            failed_tracks: any[];
+          }>('upload_transcoded_tracks', {
+            transcodingResults: [currentTranscode],
+            audioMetadataList: singleItemArray,
+            pathConfig: {
+              original_prefix: 'tracks/original',
+              medium_prefix: 'tracks/medium',
+              album_art_prefix: 'albums/artwork'
+            }
+          });
+          
+          console.log(`Upload result for track ${currentIndex + 1}:`, result);
+          
+          // Add results to our tracking arrays
+          if (result.uploaded_tracks && result.uploaded_tracks.length > 0) {
+            uploadedTracks.push(...result.uploaded_tracks);
+          }
+          
+          if (result.failed_tracks && result.failed_tracks.length > 0) {
+            failedTracks.push(...result.failed_tracks);
+          }
+        } catch (err) {
+          console.error(`Failed to upload track ${currentIndex + 1}:`, err);
+          
+          // Add to failed tracks
+          failedTracks.push({
+            original_path: currentTranscode.input_path,
+            error: err instanceof Error ? err.message : String(err)
+          });
+        }
+        
+        // Move to next track after a small delay to avoid overwhelming MongoDB
+        currentIndex++;
+        setTimeout(uploadNextTrack, 500); // 500ms delay between uploads
+      };
+      
+      // Start the sequential upload process
+      uploadNextTrack();
     } catch (err) {
       console.error('Failed to upload files:', err);
       error = err instanceof Error ? err.message : String(err);
-    } finally {
       isUploading = false;
       uploadProgress = 100;
     }
+  }
+  
+  // Helper function to handle upload results
+  function handleUploadResults(uploadResult: { 
+    success: boolean; 
+    message: string; 
+    uploaded_tracks: any[]; 
+    failed_tracks: any[];
+  }) {
+    console.log('Upload complete, final results:', uploadResult);
+    
+    if (uploadResult.uploaded_tracks) {
+      uploadedFiles = uploadResult.uploaded_tracks;
+    }
+    
+    if (uploadResult.failed_tracks) {
+      failedUploads = uploadResult.failed_tracks;
+    }
+    
+    if (uploadResult.message) {
+      if (!uploadResult.success) {
+        error = uploadResult.message;
+      } else {
+        alert(uploadResult.message);
+      }
+    }
+    
+    // Mark upload as complete
+    isUploading = false;
+    uploadProgress = 100;
+  }
+
+  // Function to enable metadata editing mode after transcoding
+  function editMetadata() {
+    isEditingMetadata = true;
+  }
+
+  // Function to edit a specific track
+  function editTrack(index: number) {
+    selectedTrackIndex = index;
+    bulkEditMode = false;
+  }
+
+  // Function to toggle track selection for bulk editing
+  function toggleTrackSelection(index: number) {
+    const idx = selectedTrackIndices.indexOf(index);
+    if (idx === -1) {
+      selectedTrackIndices = [...selectedTrackIndices, index];
+    } else {
+      selectedTrackIndices = selectedTrackIndices.filter(i => i !== index);
+    }
+  }
+
+  // Function to enable bulk edit mode
+  function startBulkEdit() {
+    bulkEditMode = true;
+    selectedTrackIndex = -1;
+  }
+
+  // Function to apply bulk edits to selected tracks
+  function applyBulkEdits() {
+    if (selectedTrackIndices.length === 0) {
+      alert('Please select at least one track to edit');
+      return;
+    }
+
+    for (const index of selectedTrackIndices) {
+      if (bulkEditFields.genre) {
+        extractedMetadata[index].track.genre = bulkEditFields.genre.split(',').map(g => g.trim());
+      }
+      if (bulkEditFields.writers) {
+        extractedMetadata[index].track.writers = bulkEditFields.writers.split(',').map(w => w.trim());
+        // Reset percentages when writers change
+        extractedMetadata[index].track.writer_percentages = 
+          extractedMetadata[index].track.writers.map(() => 
+            Math.floor(100 / extractedMetadata[index].track.writers.length));
+      }
+      if (bulkEditFields.publishers) {
+        extractedMetadata[index].track.publishers = bulkEditFields.publishers.split(',').map(p => p.trim());
+        // Reset percentages when publishers change
+        extractedMetadata[index].track.publisher_percentages = 
+          extractedMetadata[index].track.publishers.map(() => 
+            Math.floor(100 / extractedMetadata[index].track.publishers.length));
+      }
+      if (bulkEditFields.instruments) {
+        extractedMetadata[index].track.instruments = bulkEditFields.instruments.split(',').map(i => i.trim());
+      }
+      if (bulkEditFields.mood) {
+        extractedMetadata[index].track.mood = bulkEditFields.mood.split(',').map(m => m.trim());
+      }
+    }
+
+    // Reset bulk edit fields
+    bulkEditFields = {
+      genre: "",
+      writers: "",
+      publishers: "",
+      instruments: "",
+      mood: ""
+    };
+    
+    bulkEditMode = false;
+    selectedTrackIndices = [];
+  }
+
+  // Function to validate percentages
+  function validatePercentages() {
+    if (selectedTrackIndex >= 0) {
+      const track = extractedMetadata[selectedTrackIndex].track;
+      
+      if (track.writer_percentages && track.writer_percentages.length > 0) {
+        const writerSum = track.writer_percentages.reduce((sum, percent) => sum + percent, 0);
+        writerPercentagesValid = Math.abs(writerSum - 100) < 0.01;
+      }
+      
+      if (track.publisher_percentages && track.publisher_percentages.length > 0) {
+        const publisherSum = track.publisher_percentages.reduce((sum, percent) => sum + percent, 0);
+        publisherPercentagesValid = Math.abs(publisherSum - 100) < 0.01;
+      }
+    }
+  }
+
+  // Function to save individual track edits
+  function saveTrackEdits() {
+    validatePercentages();
+    if (!writerPercentagesValid) {
+      alert('Writer percentages must sum to 100%');
+      return;
+    }
+    if (!publisherPercentagesValid) {
+      alert('Publisher percentages must sum to 100%');
+      return;
+    }
+    
+    selectedTrackIndex = -1;
+  }
+
+  // Function to cancel editing and go back
+  function cancelEditing() {
+    isEditingMetadata = false;
+    selectedTrackIndex = -1;
+    bulkEditMode = false;
+    selectedTrackIndices = [];
+  }
+
+  // Function to finalize metadata and proceed to upload
+  function finalizeMetadata() {
+    isEditingMetadata = false;
   }
   
   // Function to start the upload process
@@ -504,6 +801,318 @@
             </div>
           {/each}
         </div>
+        
+        {#if !isEditingMetadata && extractedMetadata.length > 0}
+          <div class="edit-metadata-actions">
+            <button 
+              class="edit-metadata-button" 
+              on:click={editMetadata} 
+              disabled={isLoading || isTranscoding || isUploading}
+            >
+              Edit Metadata Before Upload
+            </button>
+          </div>
+        {/if}
+      </div>
+    {/if}
+    
+    {#if isEditingMetadata && extractedMetadata.length > 0}
+      <div class="metadata-editor">
+        <div class="editor-header">
+          <h3>Edit Metadata</h3>
+          <div class="editor-actions">
+            {#if selectedTrackIndices.length > 0}
+              <button class="bulk-edit-button" on:click={startBulkEdit}>
+                Bulk Edit ({selectedTrackIndices.length} selected)
+              </button>
+            {/if}
+            <button class="save-button" on:click={finalizeMetadata}>Finalize Metadata</button>
+            <button class="cancel-button" on:click={cancelEditing}>Cancel</button>
+          </div>
+        </div>
+        
+        {#if bulkEditMode}
+          <div class="bulk-edit-panel">
+            <h4>Bulk Edit Selected Tracks</h4>
+            <div class="bulk-edit-form">
+              <div class="form-group">
+                <label for="bulk-genre">Genre (comma separated)</label>
+                <input id="bulk-genre" type="text" bind:value={bulkEditFields.genre} placeholder="Rock, Pop, Jazz..." />
+              </div>
+              
+              <div class="form-group">
+                <label for="bulk-writers">Writers (comma separated)</label>
+                <input id="bulk-writers" type="text" bind:value={bulkEditFields.writers} placeholder="John Doe, Jane Smith..." />
+              </div>
+              
+              <div class="form-group">
+                <label for="bulk-publishers">Publishers (comma separated)</label>
+                <input id="bulk-publishers" type="text" bind:value={bulkEditFields.publishers} placeholder="Universal Music, Sony Music..." />
+              </div>
+              
+              <div class="form-group">
+                <label for="bulk-instruments">Instruments (comma separated)</label>
+                <input id="bulk-instruments" type="text" bind:value={bulkEditFields.instruments} placeholder="Guitar, Piano, Drums..." />
+              </div>
+              
+              <div class="form-group">
+                <label for="bulk-mood">Mood (comma separated)</label>
+                <input id="bulk-mood" type="text" bind:value={bulkEditFields.mood} placeholder="Happy, Sad, Energetic..." />
+              </div>
+              
+              <div class="form-actions">
+                <button class="apply-button" on:click={applyBulkEdits}>Apply to Selected</button>
+                <button class="cancel-button" on:click={() => bulkEditMode = false}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        {:else if selectedTrackIndex >= 0}
+          <div class="individual-edit-panel">
+            <h4>Edit Track: {extractedMetadata[selectedTrackIndex].track.title}</h4>
+            <div class="individual-edit-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="track-title">Title</label>
+                  <input 
+                    id="track-title" 
+                    type="text" 
+                    bind:value={extractedMetadata[selectedTrackIndex].track.title} 
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="track-album">Album</label>
+                  <input 
+                    id="track-album" 
+                    type="text" 
+                    bind:value={extractedMetadata[selectedTrackIndex].album.name} 
+                  />
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="track-artist">Artist</label>
+                  <input 
+                    id="track-artist" 
+                    type="text" 
+                    bind:value={extractedMetadata[selectedTrackIndex].album.artist} 
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="track-genre">Genre (comma separated)</label>
+                  <input 
+                    id="track-genre" 
+                    type="text" 
+                    value={extractedMetadata[selectedTrackIndex].track.genre.join(', ')} 
+                    on:input={(e) => {
+                      const target = e.target as HTMLInputElement;
+                      extractedMetadata[selectedTrackIndex].track.genre = target.value.split(',').map((g: string) => g.trim());
+                    }}
+                  />
+                </div>
+              </div>
+              
+              <div class="form-section">
+                <h5>Writers</h5>
+                <div class="tags-input">
+                  <input 
+                    type="text" 
+                    placeholder="Add writer (press Enter)" 
+                    on:keydown={(e) => {
+                      const target = e.target as HTMLInputElement;
+                      if (e.key === 'Enter' && target.value) {
+                        extractedMetadata[selectedTrackIndex].track.writers = [
+                          ...extractedMetadata[selectedTrackIndex].track.writers || [], 
+                          target.value
+                        ];
+                        extractedMetadata[selectedTrackIndex].track.writer_percentages = 
+                          extractedMetadata[selectedTrackIndex].track.writers.map(() => 
+                            Math.floor(100 / extractedMetadata[selectedTrackIndex].track.writers.length));
+                        target.value = '';
+                        validatePercentages();
+                      }
+                    }}
+                  />
+                </div>
+                
+                <div class="tags-list">
+                  {#if extractedMetadata[selectedTrackIndex].track.writers}
+                    {#each extractedMetadata[selectedTrackIndex].track.writers as writer, i}
+                      <div class="tag-item">
+                        <span>{writer}</span>
+                        <div class="percentage-input">
+                          <input 
+                            type="number" 
+                            min="0" 
+                            max="100" 
+                            bind:value={extractedMetadata[selectedTrackIndex].track.writer_percentages[i]}
+                            on:input={validatePercentages}
+                          />
+                          <span>%</span>
+                        </div>
+                        <button class="remove-tag" on:click={() => {
+                          extractedMetadata[selectedTrackIndex].track.writers = 
+                            extractedMetadata[selectedTrackIndex].track.writers.filter((_, idx) => idx !== i);
+                          extractedMetadata[selectedTrackIndex].track.writer_percentages = 
+                            extractedMetadata[selectedTrackIndex].track.writer_percentages.filter((_, idx) => idx !== i);
+                          validatePercentages();
+                        }}>×</button>
+                      </div>
+                    {/each}
+                    
+                    {#if !writerPercentagesValid}
+                      <div class="validation-error">
+                        Writer percentages must sum to 100%
+                      </div>
+                    {/if}
+                  {/if}
+                </div>
+              </div>
+              
+              <div class="form-section">
+                <h5>Publishers</h5>
+                <div class="tags-input">
+                  <input 
+                    type="text" 
+                    placeholder="Add publisher (press Enter)" 
+                    on:keydown={(e) => {
+                      const target = e.target as HTMLInputElement;
+                      if (e.key === 'Enter' && target.value) {
+                        extractedMetadata[selectedTrackIndex].track.publishers = [
+                          ...extractedMetadata[selectedTrackIndex].track.publishers || [], 
+                          target.value
+                        ];
+                        extractedMetadata[selectedTrackIndex].track.publisher_percentages = 
+                          extractedMetadata[selectedTrackIndex].track.publishers.map(() => 
+                            Math.floor(100 / extractedMetadata[selectedTrackIndex].track.publishers.length));
+                        target.value = '';
+                        validatePercentages();
+                      }
+                    }}
+                  />
+                </div>
+                
+                <div class="tags-list">
+                  {#if extractedMetadata[selectedTrackIndex].track.publishers}
+                    {#each extractedMetadata[selectedTrackIndex].track.publishers as publisher, i}
+                      <div class="tag-item">
+                        <span>{publisher}</span>
+                        <div class="percentage-input">
+                          <input 
+                            type="number" 
+                            min="0" 
+                            max="100" 
+                            bind:value={extractedMetadata[selectedTrackIndex].track.publisher_percentages[i]}
+                            on:input={validatePercentages}
+                          />
+                          <span>%</span>
+                        </div>
+                        <button class="remove-tag" on:click={() => {
+                          extractedMetadata[selectedTrackIndex].track.publishers = 
+                            extractedMetadata[selectedTrackIndex].track.publishers.filter((_, idx) => idx !== i);
+                          extractedMetadata[selectedTrackIndex].track.publisher_percentages = 
+                            extractedMetadata[selectedTrackIndex].track.publisher_percentages.filter((_, idx) => idx !== i);
+                          validatePercentages();
+                        }}>×</button>
+                      </div>
+                    {/each}
+                    
+                    {#if !publisherPercentagesValid}
+                      <div class="validation-error">
+                        Publisher percentages must sum to 100%
+                      </div>
+                    {/if}
+                  {/if}
+                </div>
+              </div>
+              
+              <div class="form-section">
+                <h5>Instruments & Mood</h5>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="track-instruments">Instruments (comma separated)</label>
+                    <input 
+                      id="track-instruments" 
+                      type="text" 
+                      value={extractedMetadata[selectedTrackIndex].track.instruments?.join(', ') || ''} 
+                      on:input={(e) => {
+                        const target = e.target as HTMLInputElement;
+                        extractedMetadata[selectedTrackIndex].track.instruments = target.value.split(',').map((i: string) => i.trim());
+                      }}
+                    />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="track-mood">Mood (comma separated)</label>
+                    <input 
+                      id="track-mood" 
+                      type="text" 
+                      value={extractedMetadata[selectedTrackIndex].track.mood?.join(', ') || ''} 
+                      on:input={(e) => {
+                        const target = e.target as HTMLInputElement;
+                        extractedMetadata[selectedTrackIndex].track.mood = target.value.split(',').map((m: string) => m.trim());
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-section">
+                <div class="form-group">
+                  <label for="track-comments">Comments</label>
+                  <textarea 
+                    id="track-comments" 
+                    value={extractedMetadata[selectedTrackIndex].track.comments || ''} 
+                    on:input={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      extractedMetadata[selectedTrackIndex].track.comments = target.value;
+                    }}
+                    rows="3"
+                  ></textarea>
+                </div>
+              </div>
+              
+              <div class="form-actions">
+                <button class="save-button" on:click={saveTrackEdits}>Save</button>
+                <button class="cancel-button" on:click={() => selectedTrackIndex = -1}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        {:else}
+          <div class="tracks-list">
+            {#each extractedMetadata as metadata, i}
+              <div class="track-item" class:selected={selectedTrackIndices.includes(i)}>
+                <div class="track-select">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedTrackIndices.includes(i)}
+                    on:change={() => toggleTrackSelection(i)} 
+                  />
+                </div>
+                
+                <div class="track-info" on:click={() => editTrack(i)}>
+                  <div class="track-title">{metadata.track.title}</div>
+                  <div class="track-details">
+                    <span>{metadata.album.artist}</span>
+                    <span class="separator">•</span>
+                    <span>{metadata.album.name}</span>
+                    {#if metadata.track.genre && metadata.track.genre.length > 0}
+                      <span class="separator">•</span>
+                      <span>{metadata.track.genre.join(', ')}</span>
+                    {/if}
+                  </div>
+                  <div class="track-path">{metadata.track.original_path?.split('/').pop() || metadata.fileInfo.path.split('/').pop()}</div>
+                </div>
+                
+                <div class="track-actions">
+                  <button class="edit-button" on:click={() => editTrack(i)}>Edit</button>
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/if}
       </div>
     {/if}
     
@@ -562,7 +1171,7 @@
         <button 
           class="upload-button" 
           on:click={uploadFiles} 
-          disabled={isLoading || isTranscoding || isUploading || transcodedFiles.length === 0}
+          disabled={isLoading || isTranscoding || isUploading || transcodedFiles.length === 0 || isEditingMetadata}
         >
           Upload to Library
         </button>
@@ -918,5 +1527,288 @@
   
   .debug-info {
     margin-bottom: 16px;
+  }
+  
+  /* Metadata Editing Styles */
+  .edit-metadata-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .edit-metadata-button {
+    background-color: #805ad5;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .edit-metadata-button:hover {
+    background-color: #6b46c1;
+  }
+  
+  .metadata-editor {
+    margin-top: 30px;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .editor-header h3 {
+    margin: 0;
+    color: #2d3748;
+  }
+  
+  .editor-actions {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .save-button, .apply-button {
+    background-color: #4299e1;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .save-button:hover, .apply-button:hover {
+    background-color: #3182ce;
+  }
+  
+  .cancel-button {
+    background-color: #a0aec0;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .cancel-button:hover {
+    background-color: #718096;
+  }
+  
+  .bulk-edit-button {
+    background-color: #805ad5;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .bulk-edit-button:hover {
+    background-color: #6b46c1;
+  }
+  
+  .edit-button {
+    background-color: #4299e1;
+    color: white;
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .edit-button:hover {
+    background-color: #3182ce;
+  }
+  
+  .bulk-edit-panel, .individual-edit-panel {
+    background-color: white;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .bulk-edit-panel h4, .individual-edit-panel h4 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #2d3748;
+  }
+  
+  .bulk-edit-form, .individual-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 16px;
+  }
+  
+  .form-row .form-group {
+    flex: 1;
+  }
+  
+  .form-section {
+    margin-top: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .form-section h5 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: #4a5568;
+  }
+  
+  .tags-input {
+    margin-bottom: 8px;
+  }
+  
+  .tags-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .tag-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background-color: #edf2f7;
+    border-radius: 4px;
+  }
+  
+  .tag-item span {
+    flex: 1;
+  }
+  
+  .percentage-input {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .percentage-input input {
+    width: 60px;
+    padding: 4px;
+    border: 1px solid #e2e8f0;
+    border-radius: 2px;
+  }
+  
+  .remove-tag {
+    background: none;
+    border: none;
+    color: #a0aec0;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 4px;
+  }
+  
+  .remove-tag:hover {
+    color: #e53e3e;
+  }
+  
+  .validation-error {
+    color: #e53e3e;
+    font-size: 14px;
+  }
+  
+  .tracks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+  
+  .track-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s;
+  }
+  
+  .track-item:hover {
+    background-color: #f7fafc;
+  }
+  
+  .track-item.selected {
+    background-color: #ebf8ff;
+  }
+  
+  .track-select {
+    padding-right: 10px;
+  }
+  
+  .track-info {
+    flex: 1;
+    cursor: pointer;
+    padding: 0 10px;
+  }
+  
+  .track-title {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 4px;
+  }
+  
+  .track-details {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #4a5568;
+    margin-bottom: 4px;
+  }
+  
+  .separator {
+    margin: 0 6px;
+    color: #cbd5e0;
+  }
+  
+  .track-path {
+    font-size: 12px;
+    color: #718096;
+  }
+  
+  .track-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    resize: vertical;
+    font-family: inherit;
+  }
+  
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
   }
 </style> 
