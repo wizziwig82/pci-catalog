@@ -86,9 +86,9 @@
     album: "",
     artist: "",
     genre: "",
-    writers: "",
+    writers: [] as string[],
     writer_percentages: [] as number[],
-    publishers: "",
+    publishers: [] as string[],
     publisher_percentages: [] as number[],
     instruments: "",
     mood: ""
@@ -97,6 +97,8 @@
   // Writer and publisher percentages validation
   let writerPercentagesValid = true;
   let publisherPercentagesValid = true;
+  let bulkWriterPercentagesValid = true;
+  let bulkPublisherPercentagesValid = true;
   
   // Add selected track state variables for instruments and moods
   let selectedTrackInstruments: string[] = [];
@@ -468,12 +470,91 @@
   function startBulkEdit() {
     bulkEditMode = true;
     selectedTrackIndex = -1;
+    
+    // Only populate fields if tracks are selected
+    if (selectedTrackIndices.length > 0) {
+      // Initialize with values from the first selected track
+      const firstTrack = extractedMetadata[selectedTrackIndices[0]];
+      
+      // For simple fields, only use value if all selected tracks have the same value
+      let albumName = firstTrack.album.name;
+      let artistName = firstTrack.album.artist;
+      let genreValue = firstTrack.track.genre.join(', ');
+      let instrumentsValue = firstTrack.track.instruments?.join(', ') || '';
+      let moodValue = firstTrack.track.mood?.join(', ') || '';
+      
+      // Check if all selected tracks have the same values
+      for (let i = 1; i < selectedTrackIndices.length; i++) {
+        const track = extractedMetadata[selectedTrackIndices[i]];
+        
+        if (track.album.name !== albumName) albumName = '';
+        if (track.album.artist !== artistName) artistName = '';
+        if (track.track.genre.join(', ') !== genreValue) genreValue = '';
+        if ((track.track.instruments?.join(', ') || '') !== instrumentsValue) instrumentsValue = '';
+        if ((track.track.mood?.join(', ') || '') !== moodValue) moodValue = '';
+      }
+      
+      // Collect all unique writers and publishers across all selected tracks
+      const writersSet = new Set<string>();
+      const publishersSet = new Set<string>();
+      
+      selectedTrackIndices.forEach(index => {
+        const track = extractedMetadata[index].track;
+        
+        // Add all writers from this track
+        if (track.writers && track.writers.length > 0) {
+          track.writers.forEach(writer => writersSet.add(writer));
+        }
+        
+        // Add all publishers from this track
+        if (track.publishers && track.publishers.length > 0) {
+          track.publishers.forEach(publisher => publishersSet.add(publisher));
+        }
+      });
+      
+      // Convert sets to arrays
+      const writers = Array.from(writersSet);
+      const publishers = Array.from(publishersSet);
+      
+      // Calculate equal percentages
+      const writerPercentage = writers.length > 0 ? Math.floor(100 / writers.length) : 0;
+      const publisherPercentage = publishers.length > 0 ? Math.floor(100 / publishers.length) : 0;
+      
+      // Set bulk edit fields with the collected values
+      bulkEditFields = {
+        album: albumName,
+        artist: artistName,
+        genre: genreValue,
+        writers: writers,
+        writer_percentages: writers.map(() => writerPercentage),
+        publishers: publishers,
+        publisher_percentages: publishers.map(() => publisherPercentage),
+        instruments: instrumentsValue,
+        mood: moodValue
+      };
+      
+      // Validate the percentages
+      validatePercentages();
+    }
   }
 
   // Function to apply bulk edits to selected tracks
   function applyBulkEdits() {
     if (selectedTrackIndices.length === 0) {
       alert('Please select at least one track to edit');
+      return;
+    }
+
+    validatePercentages();
+    
+    // Check if percentages are valid
+    if (bulkEditFields.writers.length > 0 && !bulkWriterPercentagesValid) {
+      alert('Writer percentages must sum to 100%');
+      return;
+    }
+    
+    if (bulkEditFields.publishers.length > 0 && !bulkPublisherPercentagesValid) {
+      alert('Publisher percentages must sum to 100%');
       return;
     }
 
@@ -487,19 +568,13 @@
       if (bulkEditFields.genre) {
         extractedMetadata[index].track.genre = bulkEditFields.genre.split(',').map(g => g.trim());
       }
-      if (bulkEditFields.writers) {
-        extractedMetadata[index].track.writers = bulkEditFields.writers.split(',').map(w => w.trim());
-        // Reset percentages when writers change
-        extractedMetadata[index].track.writer_percentages = 
-          extractedMetadata[index].track.writers.map(() => 
-            Math.floor(100 / extractedMetadata[index].track.writers.length));
+      if (bulkEditFields.writers.length > 0) {
+        extractedMetadata[index].track.writers = [...bulkEditFields.writers];
+        extractedMetadata[index].track.writer_percentages = [...bulkEditFields.writer_percentages];
       }
-      if (bulkEditFields.publishers) {
-        extractedMetadata[index].track.publishers = bulkEditFields.publishers.split(',').map(p => p.trim());
-        // Reset percentages when publishers change
-        extractedMetadata[index].track.publisher_percentages = 
-          extractedMetadata[index].track.publishers.map(() => 
-            Math.floor(100 / extractedMetadata[index].track.publishers.length));
+      if (bulkEditFields.publishers.length > 0) {
+        extractedMetadata[index].track.publishers = [...bulkEditFields.publishers];
+        extractedMetadata[index].track.publisher_percentages = [...bulkEditFields.publisher_percentages];
       }
       if (bulkEditFields.instruments) {
         extractedMetadata[index].track.instruments = bulkEditFields.instruments.split(',').map(i => i.trim());
@@ -514,10 +589,10 @@
       album: "",
       artist: "",
       genre: "",
-      writers: "",
-      writer_percentages: [],
-      publishers: "",
-      publisher_percentages: [],
+      writers: [] as string[],
+      writer_percentages: [] as number[],
+      publishers: [] as string[],
+      publisher_percentages: [] as number[],
       instruments: "",
       mood: ""
     };
@@ -540,6 +615,21 @@
         const publisherSum = track.publisher_percentages.reduce((sum, percent) => sum + percent, 0);
         publisherPercentagesValid = Math.abs(publisherSum - 100) < 0.01;
       }
+    }
+    
+    // Validate bulk edit percentages
+    if (bulkEditFields.writer_percentages && bulkEditFields.writer_percentages.length > 0) {
+      const writerSum = bulkEditFields.writer_percentages.reduce((sum, percent) => sum + percent, 0);
+      bulkWriterPercentagesValid = Math.abs(writerSum - 100) < 0.01;
+    } else {
+      bulkWriterPercentagesValid = true;
+    }
+    
+    if (bulkEditFields.publisher_percentages && bulkEditFields.publisher_percentages.length > 0) {
+      const publisherSum = bulkEditFields.publisher_percentages.reduce((sum, percent) => sum + percent, 0);
+      bulkPublisherPercentagesValid = Math.abs(publisherSum - 100) < 0.01;
+    } else {
+      bulkPublisherPercentagesValid = true;
     }
   }
 
@@ -886,10 +976,55 @@
                 <div class="tags-input">
                   <input 
                     type="text" 
-                    placeholder="Add writers (comma separated)" 
-                    bind:value={bulkEditFields.writers}
+                    placeholder="Add writer (press Enter)" 
+                    on:keydown={(e) => {
+                      const target = e.target as HTMLInputElement;
+                      if (e.key === 'Enter' && target.value) {
+                        bulkEditFields.writers = [
+                          ...bulkEditFields.writers, 
+                          target.value
+                        ];
+                        bulkEditFields.writer_percentages = 
+                          bulkEditFields.writers.map(() => 
+                            Math.floor(100 / bulkEditFields.writers.length));
+                        target.value = '';
+                        validatePercentages();
+                      }
+                    }}
                   />
-                  <div class="bulk-hint">Writers will be split by commas and percentages will be distributed equally</div>
+                </div>
+                
+                <div class="tags-list">
+                  {#if bulkEditFields.writers.length > 0}
+                    {#each bulkEditFields.writers as writer, i}
+                      <div class="tag-item">
+                        <span>{writer}</span>
+                        <div class="percentage-input">
+                          <input 
+                            type="number" 
+                            min="0" 
+                            max="100" 
+                            bind:value={bulkEditFields.writer_percentages[i]}
+                            on:input={validatePercentages}
+                          />
+                          <span>%</span>
+                        </div>
+                        <button class="remove-tag" on:click={() => {
+                          bulkEditFields.writers = 
+                            bulkEditFields.writers.filter((_, idx) => idx !== i);
+                          bulkEditFields.writer_percentages = 
+                            bulkEditFields.writer_percentages.filter((_, idx) => idx !== i);
+                          validatePercentages();
+                        }}>×</button>
+                      </div>
+                    {/each}
+                    
+                    {#if !bulkWriterPercentagesValid}
+                      <div class="validation-error">
+                        Writer percentages must sum to 100%
+                      </div>
+                    {/if}
+                  {/if}
                 </div>
               </div>
               
@@ -898,10 +1033,55 @@
                 <div class="tags-input">
                   <input 
                     type="text" 
-                    placeholder="Add publishers (comma separated)" 
-                    bind:value={bulkEditFields.publishers}
+                    placeholder="Add publisher (press Enter)" 
+                    on:keydown={(e) => {
+                      const target = e.target as HTMLInputElement;
+                      if (e.key === 'Enter' && target.value) {
+                        bulkEditFields.publishers = [
+                          ...bulkEditFields.publishers, 
+                          target.value
+                        ];
+                        bulkEditFields.publisher_percentages = 
+                          bulkEditFields.publishers.map(() => 
+                            Math.floor(100 / bulkEditFields.publishers.length));
+                        target.value = '';
+                        validatePercentages();
+                      }
+                    }}
                   />
-                  <div class="bulk-hint">Publishers will be split by commas and percentages will be distributed equally</div>
+                </div>
+                
+                <div class="tags-list">
+                  {#if bulkEditFields.publishers.length > 0}
+                    {#each bulkEditFields.publishers as publisher, i}
+                      <div class="tag-item">
+                        <span>{publisher}</span>
+                        <div class="percentage-input">
+                          <input 
+                            type="number" 
+                            min="0" 
+                            max="100" 
+                            bind:value={bulkEditFields.publisher_percentages[i]}
+                            on:input={validatePercentages}
+                          />
+                          <span>%</span>
+                        </div>
+                        <button class="remove-tag" on:click={() => {
+                          bulkEditFields.publishers = 
+                            bulkEditFields.publishers.filter((_, idx) => idx !== i);
+                          bulkEditFields.publisher_percentages = 
+                            bulkEditFields.publisher_percentages.filter((_, idx) => idx !== i);
+                          validatePercentages();
+                        }}>×</button>
+                      </div>
+                    {/each}
+                    
+                    {#if !bulkPublisherPercentagesValid}
+                      <div class="validation-error">
+                        Publisher percentages must sum to 100%
+                      </div>
+                    {/if}
+                  {/if}
                 </div>
               </div>
               
@@ -1057,7 +1237,6 @@
                           extractedMetadata[selectedTrackIndex].track.publishers.map(() => 
                             Math.floor(100 / extractedMetadata[selectedTrackIndex].track.publishers.length));
                         target.value = '';
-                        validatePercentages();
                       }
                     }}
                   />
