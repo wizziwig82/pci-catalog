@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { invoke } from '@tauri-apps/api/core';
+  // import { invoke } from '@tauri-apps/api/core'; // No longer needed directly
+  import { safeInvoke } from '$lib/utils/invokeWrapper'; // Import the wrapper
   
   // Define TypeScript interfaces
   interface PathInfo {
@@ -62,66 +63,58 @@
     isLoading = true;
     error = null;
     
-    try {
-      console.log('Attempting to initialize MongoDB client...');
-      // Initialize MongoDB client
-      const mongoInitialized = await invoke<boolean>('init_mongo_client');
-      console.log('MongoDB client initialization result:', mongoInitialized);
-      
-      if (!mongoInitialized) {
-        throw new Error('Failed to initialize MongoDB client. Please check your credentials in Settings.');
-      }
-      
-      // Calculate skip value for pagination
-      const skip = (currentPage - 1) * tracksPerPage;
-      
-      console.log('Fetching tracks with params:', {
-        sortField,
-        sortDirection,
-        limit: tracksPerPage,
-        skip
-      });
-      
-      // Fetch tracks from MongoDB
-      const result = await invoke<TrackListResponse>('fetch_all_tracks', {
-        sortField,
-        sortDirection,
-        limit: tracksPerPage,
-        skip
-      });
-      
-      console.log('Track fetch result:', result);
-      
-      if (result.success) {
-        tracks = result.tracks;
-        totalTracks = result.total_count;
-        console.log('Tracks loaded:', tracks.length, 'Total count:', totalTracks);
-      } else {
-        throw new Error(result.message || 'Failed to fetch tracks');
-      }
-    } catch (err) {
-      console.error('Failed to load tracks:', err);
-      error = err instanceof Error ? err.message : String(err);
-    } finally {
+    // Use safeInvoke for initialization
+    const mongoInitialized = await safeInvoke<boolean>('init_mongo_client');
+    if (mongoInitialized === null || !mongoInitialized) {
+      // Error handled by safeInvoke, update UI state
+      error = 'Failed to initialize database connection. Check Settings.';
       isLoading = false;
+      return;
     }
+    console.log('MongoDB client initialized successfully for catalog.');
+
+    // Calculate skip value for pagination
+    const skip = (currentPage - 1) * tracksPerPage;
+
+    console.log('Fetching tracks with params:', { sortField, sortDirection, limit: tracksPerPage, skip });
+
+    // Use safeInvoke to fetch tracks
+    const result = await safeInvoke<TrackListResponse>('fetch_all_tracks', {
+      sortField,
+      sortDirection,
+      limit: tracksPerPage,
+      skip
+    });
+
+    if (result !== null && result.success) {
+      tracks = result.tracks;
+      totalTracks = result.total_count;
+      console.log('Tracks loaded:', tracks.length, 'Total count:', totalTracks);
+      error = null; // Clear previous errors
+    } else {
+      // Error handled by safeInvoke or command reported failure
+      tracks = []; // Clear potentially stale data
+      totalTracks = 0;
+      // error = result?.message || 'Failed to fetch tracks.'; // Error shown by toast
+    }
+    isLoading = false;
   }
   
   async function testMongoDBCollections() {
     isTestingMongo = true;
     mongoTestResult = null;
     
-    try {
-      console.log('Testing MongoDB collections...');
-      const result = await invoke<string>('test_mongodb_collections');
-      console.log('MongoDB test result:', result);
+    console.log('Testing MongoDB collections...');
+    // Use safeInvoke
+    const result = await safeInvoke<string>('test_mongodb_collections');
+    if (result !== null) {
       mongoTestResult = result;
-    } catch (err) {
-      console.error('Failed to test MongoDB collections:', err);
-      mongoTestResult = `Error: ${err instanceof Error ? err.message : String(err)}`;
-    } finally {
-      isTestingMongo = false;
+      console.log('MongoDB test result:', result);
+    } else {
+      // Error handled by safeInvoke
+      mongoTestResult = 'Failed to test collections (see toast/console).';
     }
+    isTestingMongo = false;
   }
   
   function handleSort(field: string) {

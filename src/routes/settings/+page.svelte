@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { invoke } from '@tauri-apps/api/core';
+  // import { invoke } from '@tauri-apps/api/core'; // No longer needed directly
+  import { safeInvoke } from '$lib/utils/invokeWrapper'; // Import the wrapper
+  import { showSuccessToast } from '$lib/stores/notifications'; // Import success toast
 
   // MongoDB variables - MODIFIED for Connection String
   let mongoConnectionString = ''; 
@@ -25,194 +27,176 @@
 
   async function loadStoredCredentials() {
     try {
-      // Directly attempt to load MongoDB connection string
-      // @ts-ignore - Tauri API typings might still be imperfect
-      const connectionString = await invoke<string>('get_mongo_credentials');
-      if (connectionString) {
+      // Use safeInvoke to load MongoDB connection string
+      const connectionString = await safeInvoke<string>('get_mongo_credentials_wrapper');
+      if (connectionString !== null) { // Check for null (indicates error handled by wrapper)
         mongoConnectionString = connectionString;
-        mongoConnected = true; // Assume connected if loaded, test separately
+        // Don't assume connected, let test/init confirm
+        // mongoConnected = true;
+      } else {
+        // Error occurred (toast shown by safeInvoke), ensure disconnected state
+        mongoConnected = false;
       }
-    } catch (error: any) {
-      // Ignore specific "not found" or empty file errors, log others
-      const errorMsg = typeof error === 'string' ? error : JSON.stringify(error);
-      if (!errorMsg.includes('not found') && !errorMsg.includes('empty')) {
-        console.error('Error loading MongoDB credentials:', error);
-      }
-      mongoConnected = false; // Ensure disconnected state if load fails
+    } catch (e) {
+       // This catch block is less likely to be hit if safeInvoke handles errors,
+       // but keep it as a fallback for unexpected issues during load.
+       console.error("Unexpected error during MongoDB credential load:", e);
+       mongoConnected = false;
     }
 
     try {
-      // Directly attempt to load R2 credentials
-      // @ts-ignore - Tauri API typings might still be imperfect for credential structure
-      const credentials = await invoke<any>('get_r2_credentials');
-      if (credentials) {
-        r2AccountId = credentials.account_id;
-        r2BucketName = credentials.bucket_name;
-        r2AccessKeyId = credentials.access_key_id;
-        r2SecretAccessKey = credentials.secret_access_key;
-        r2Endpoint = credentials.endpoint || '';
-        r2Connected = true; // Assume connected if loaded, test separately if needed
+      // Use safeInvoke to load R2 credentials
+      const credentials = await safeInvoke<any>('get_r2_credentials_wrapper'); // Assuming R2Credentials structure matches Rust
+      if (credentials !== null) {
+        r2AccountId = credentials.account_id ?? '';
+        r2BucketName = credentials.bucket_name ?? '';
+        r2AccessKeyId = credentials.access_key_id ?? '';
+        r2SecretAccessKey = credentials.secret_access_key ?? '';
+        r2Endpoint = credentials.endpoint ?? '';
+        // Don't assume connected
+        // r2Connected = true;
+      } else {
+        // Error occurred (toast shown by safeInvoke), ensure disconnected state
+        r2Connected = false;
       }
-    } catch (error) {
-      // Ignore specific "not found" error, log others
-      if (error !== 'R2 credentials not found') {
-        console.error('Error loading R2 credentials:', error);
-      }
+    } catch (e) {
+       console.error("Unexpected error during R2 credential load:", e);
+       r2Connected = false;
     }
   }
 
   async function initMongoClient() {
-    try {
-      mongoLoading = true;
-      mongoConnectionError = '';
-      
-      // Store the connection string
-      // @ts-ignore - Tauri API typings not working correctly
-      await invoke('store_mongo_credentials', {
-        connectionString: mongoConnectionString // Pass connection string
-      });
-      
-      // Initialize the MongoDB client (backend now uses the stored string)
-      // @ts-ignore - Tauri API typings not working correctly
-      const success = await invoke('init_mongo_client');
-      
-      if (success) {
-        mongoConnected = true;
-        mongoConnectionError = '';
-      } else {
-        mongoConnected = false;
-        mongoConnectionError = 'Failed to connect to MongoDB using the provided string.';
-      }
-    } catch (error: any) {
-      mongoConnected = false;
-      mongoConnectionError = `Error connecting to MongoDB: ${typeof error === 'string' ? error : JSON.stringify(error)}`;
-      console.error('MongoDB connection error:', error);
-    } finally {
+    mongoLoading = true;
+    mongoConnectionError = '';
+
+    // Store credentials using safeInvoke
+    const storeSuccess = await safeInvoke<boolean>('store_mongo_credentials_wrapper', {
+      connectionString: mongoConnectionString
+    });
+
+    if (storeSuccess === null) {
+      // Error storing (toast shown by safeInvoke)
       mongoLoading = false;
+      return; // Stop if storing failed
     }
+
+    // Initialize client using safeInvoke
+    const initSuccess = await safeInvoke<boolean>('init_mongo_client');
+
+    if (initSuccess) {
+      mongoConnected = true;
+      mongoConnectionError = ''; // Clear previous errors
+      showSuccessToast('MongoDB connected successfully!');
+    } else {
+      // Error initializing (toast shown by safeInvoke)
+      mongoConnected = false;
+      // mongoConnectionError = 'Failed to initialize MongoDB client.'; // Error shown by toast
+    }
+
+    mongoLoading = false;
   }
 
   async function initR2Client() {
-    try {
-      r2Loading = true;
-      r2ConnectionError = '';
-      
-      // Store the credentials
-      // @ts-ignore - Tauri API typings not working correctly
-      await invoke('store_r2_credentials', {
-        accountId: r2AccountId,
-        bucketName: r2BucketName,
-        accessKeyId: r2AccessKeyId,
-        secretAccessKey: r2SecretAccessKey,
-        endpoint: r2Endpoint
-      });
-      
-      // Initialize the R2 client
-      // @ts-ignore - Tauri API typings not working correctly
-      const success = await invoke('init_r2_client');
-      
-      if (success) {
-        r2Connected = true;
-        r2ConnectionError = '';
-      } else {
-        r2Connected = false;
-        r2ConnectionError = 'Failed to connect to R2';
-      }
-    } catch (error) {
-      r2Connected = false;
-      r2ConnectionError = `Error connecting to R2: ${error}`;
-      console.error('R2 connection error:', error);
-    } finally {
+    r2Loading = true;
+    r2ConnectionError = '';
+
+    // Store credentials using safeInvoke
+    const storeSuccess = await safeInvoke<boolean>('store_r2_credentials_wrapper', {
+      accountId: r2AccountId,
+      bucketName: r2BucketName, // Ensure key matches Rust command argument name
+      accessKeyId: r2AccessKeyId, // Ensure key matches Rust command argument name
+      secretAccessKey: r2SecretAccessKey, // Ensure key matches Rust command argument name
+      endpoint: r2Endpoint
+    });
+
+     if (storeSuccess === null) {
+      // Error storing (toast shown by safeInvoke)
       r2Loading = false;
+      return; // Stop if storing failed
     }
+
+    // Initialize client using safeInvoke
+    const initSuccess = await safeInvoke<boolean>('init_r2_client');
+
+    if (initSuccess) {
+      r2Connected = true;
+      r2ConnectionError = ''; // Clear previous errors
+      showSuccessToast('R2 connected successfully!');
+    } else {
+      // Error initializing (toast shown by safeInvoke)
+      r2Connected = false;
+      // r2ConnectionError = 'Failed to initialize R2 client.'; // Error shown by toast
+    }
+
+    r2Loading = false;
   }
 
   async function testMongoConnection() {
     mongoLoading = true;
-    mongoConnectionError = '';
-    
-    try {
-      console.log('Testing MongoDB connection...');
-      // First, try initializing the client if it's not already initialized
-      try {
-        console.log('Initializing MongoDB client...');
-        const initResult = await invoke('init_mongo_client');
-        console.log('MongoDB client initialization result:', initResult);
-      } catch (initError) {
-        console.error('Error initializing MongoDB client:', initError);
-      }
-      
-      // Now test the connection
-      const result = await invoke('test_mongo_connection');
-      console.log('MongoDB connection test result:', result);
-      
-      if (result) {
-        mongoConnected = true;
-        mongoConnectionError = 'Connection successful!';
-      } else {
-        mongoConnected = false;
-        mongoConnectionError = 'Failed to connect to MongoDB. Check the connection string and network.';
-      }
-    } catch (error: any) {
+    mongoConnectionError = ''; // Clear previous status
+
+    // Test connection using safeInvoke
+    const success = await safeInvoke<boolean>('test_mongo_connection');
+
+    if (success) {
+      mongoConnected = true;
+      mongoConnectionError = 'Connection successful!'; // Provide feedback in the UI
+      // showSuccessToast('MongoDB connection test successful!'); // Optional toast
+    } else {
+      // Error testing (toast shown by safeInvoke)
       mongoConnected = false;
-      console.error('MongoDB connection test error:', error);
-      mongoConnectionError = `Error testing MongoDB connection: ${typeof error === 'string' ? error : JSON.stringify(error)}`;
-    } finally {
-      mongoLoading = false;
+      // mongoConnectionError = 'Connection test failed.'; // Error shown by toast
     }
+
+    mongoLoading = false;
   }
 
   async function testR2Connection() {
-    try {
-      r2Loading = true;
-      r2ConnectionError = '';
-      
-      // Test the R2 connection
-      // @ts-ignore - Tauri API typings not working correctly
-      const success = await invoke('test_r2_connection');
-      
-      if (success) {
-        r2Connected = true;
-        r2ConnectionError = '';
-      } else {
-        r2Connected = false;
-        r2ConnectionError = 'Failed to connect to R2';
-      }
-    } catch (error) {
+    r2Loading = true;
+    r2ConnectionError = ''; // Clear previous status
+
+    // Test connection using safeInvoke
+    const success = await safeInvoke<boolean>('test_r2_connection');
+
+    if (success) {
+      r2Connected = true;
+      r2ConnectionError = 'Connection successful!'; // Provide feedback in the UI
+      // showSuccessToast('R2 connection test successful!'); // Optional toast
+    } else {
+      // Error testing (toast shown by safeInvoke)
       r2Connected = false;
-      r2ConnectionError = `Error testing R2 connection: ${error}`;
-      console.error('R2 connection test error:', error);
-    } finally {
-      r2Loading = false;
+      // r2ConnectionError = 'Connection test failed.'; // Error shown by toast
     }
+
+    r2Loading = false;
   }
 
   async function deleteMongoCredentials() {
-    try {
-      // @ts-ignore - Tauri API typings not working correctly
-      await invoke('delete_credentials', { credential_type: 'mongo' });
-      mongoConnectionString = ''; // Clear the variable
+    // Use safeInvoke for deletion
+    const success = await safeInvoke<void>('delete_credentials', { credential_type: 'mongo' });
+    if (success !== null) { // Check if command itself succeeded (null means error)
+      mongoConnectionString = '';
       mongoConnected = false;
-      mongoConnectionError = ''; // Clear error message
-    } catch (error) {
-      console.error('Error deleting MongoDB credentials:', error);
-      mongoConnectionError = 'Failed to delete credentials.'; // Provide feedback
+      mongoConnectionError = '';
+      showSuccessToast('MongoDB credentials deleted.');
     }
+    // Error toast is shown by safeInvoke if deletion fails
   }
 
   async function deleteR2Credentials() {
-    try {
-      // @ts-ignore - Tauri API typings not working correctly
-      await invoke('delete_credentials', { credential_type: 'r2' });
+    // Use safeInvoke for deletion
+    const success = await safeInvoke<void>('delete_credentials', { credential_type: 'r2' });
+     if (success !== null) {
       r2AccountId = '';
       r2BucketName = '';
       r2AccessKeyId = '';
       r2SecretAccessKey = '';
       r2Endpoint = '';
       r2Connected = false;
-    } catch (error) {
-      console.error('Error deleting R2 credentials:', error);
+      r2ConnectionError = ''; // Clear error message
+      showSuccessToast('R2 credentials deleted.');
     }
+    // Error toast is shown by safeInvoke if deletion fails
   }
 </script>
 

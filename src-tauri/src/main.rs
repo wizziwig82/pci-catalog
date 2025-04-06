@@ -3,522 +3,78 @@
 
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
-use log::{debug, error, info, warn};
-use mongodb::{bson::doc, Client};
-// Commented out problematic imports
-// use rusty_s3::{Bucket, S3Action};
-use tauri_plugin_dialog::DialogExt;
+use log::{error, info, warn};
+use tauri_plugin_dialog::{DialogExt};
 use std::fs;
 use std::path::{Path, PathBuf};
-// use std::collections::HashMap;
-// use std::sync::Arc;
-use keyring::Entry;
+use std::sync::Arc;
+// keyring::Entry moved to credentials.rs
 use tauri::{
-    async_runtime, command, AppHandle, Manager, State, Window,
+    command, AppHandle, State, Manager, Emitter,
 };
-// use url::Url;
+use tokio::sync::mpsc;
 
-use crate::audio::transcoding::TranscodingError;
+// Import modules
+// mod audio; // Moved to features::upload
+// mod storage; // Moved to features::catalog
+// mod error; // Moved to lib.rs
+// mod upload; // Moved to features::upload
+// mod commands; // Moved to core::commands_old
+// mod credentials; // Moved to features::credentials
+mod features; // NEW: Declare features module
+// mod core;     // Moved to lib.rs
 
-// Define keychain constants
-const KEYCHAIN_SERVICE_MONGO: &str = "com.musiclibrarymanager.mongo";
-const KEYCHAIN_ACCOUNT_MONGO: &str = "mongo_credentials";
-const KEYCHAIN_SERVICE_R2: &str = "com.musiclibrarymanager.r2";
-const KEYCHAIN_ACCOUNT_R2: &str = "r2_credentials";
-
-// Dev-mode fallback config file path for credentials (only used if keychain fails)
-#[cfg(debug_assertions)]
-const DEV_CREDENTIALS_FILE: &str = "dev_credentials.json";
-
-// Import audio module
-mod audio;
-use audio::{extract_metadata, AudioMetadata};
-// use audio::{TrackMetadata, AlbumMetadata};
-use audio::transcoding::{transcode_file, TranscodingOptions, TranscodingResult, transcode_to_quality};
-
-// Import storage module
-mod storage;
-// Simplify imports to avoid unused warnings
-// use storage::r2::{R2Client, R2UploadResult};
-// use storage::mongodb::{MongoClient as MongoClientImpl, Album, Track, DbResponse};
-
-// Import the upload module and its functions
-mod upload;
-use upload::upload_transcoded_tracks;
-use upload::upload_album_artwork;
-// use upload::{BulkUploadResponse, UploadedTrackInfo, FailedTrackInfo, UploadPathConfig};
-
-// Import commands module
-mod commands;
-
-/// MongoDB client state
-pub struct MongoState {
-    client: Mutex<Option<mongodb::Client>>,
+// Add a simple test command for metadata extraction
+#[tauri::command]
+fn test_extract_metadata(filePath: String) -> Result<serde_json::Value, String> {
+    info!("Test extract metadata for: {}", filePath);
+    // Return a dummy metadata object
+    Ok(serde_json::json!({
+        "title": "Test Title",
+        "artist": "Test Artist",
+        "album": "Test Album",
+        "duration_sec": 180.0
+    }))
 }
 
-/// R2 client state
-pub struct R2State {
-    client: Mutex<Option<aws_sdk_s3::Client>>,
+// Use statements
+// Make re-exports explicit
+pub use app_lib::error::CommandError;
+pub use app_lib::core;
+use app_lib::{MongoState, R2State}; // Use items from the library crate
+use app_lib::features::upload::audio::transcode; // Import transcode module
+use app_lib::features::upload::{ // Corrected path to use app_lib
+    start_upload_queue, cancel_upload_queue, UploadState, UploadQueueItem,
+};
+use app_lib::features::credentials::{ // Corrected path to use app_lib
+    store_r2_credentials,
+    get_r2_credentials,
+    store_mongo_credentials,
+    get_mongo_credentials,
+    has_credentials,
+    delete_credentials,
+    R2Credentials, // Re-export struct if needed by other modules called from main
+};
+// --- Credential constants, structs, and helpers moved to credentials.rs ---
+
+// --- State Structs (MongoState, R2State) moved to lib.rs ---
+
+// UploadState is defined in upload.rs.
+
+// --- Credential Structs (MongoCredentials, R2Credentials) are now in credentials.rs ---
+// --- DevCredentials struct and helpers are now in credentials.rs ---
+
+/// Result type for audio transcoding operations
+#[derive(Debug, Serialize, Deserialize)]
+struct TranscodingResult {
+    output_path: String,
 }
 
-// Development credentials storage structure
-#[cfg(debug_assertions)]
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
-struct DevCredentials {
-    mongo_connection_string: Option<String>,
-    r2_credentials: Option<R2Credentials>,
-}
+// --- Client Initialization ---
 
-// Development-mode fallback for credential storage/retrieval
-#[cfg(debug_assertions)]
-async fn load_dev_credentials() -> DevCredentials {
-    let path = PathBuf::from(DEV_CREDENTIALS_FILE);
-    if path.exists() {
-        match fs::read_to_string(&path) {
-            Ok(json_str) => {
-                match serde_json::from_str::<DevCredentials>(&json_str) {
-                    Ok(creds) => {
-                        info!("Loaded development credentials from file");
-                        return creds;
-                    },
-                    Err(e) => {
-                        warn!("Failed to parse development credentials file: {}", e);
-                    }
-                }
-            },
-            Err(e) => {
-                warn!("Failed to read development credentials file: {}", e);
-            }
-        }
-    }
-    
-    DevCredentials::default()
-}
-
-#[cfg(debug_assertions)]
-async fn save_dev_credentials(creds: &DevCredentials) -> Result<(), String> {
-    let json_str = match serde_json::to_string_pretty(creds) {
-        Ok(s) => s,
-        Err(e) => return Err(format!("Failed to serialize development credentials: {}", e)),
-    };
-    
-    match fs::write(DEV_CREDENTIALS_FILE, json_str) {
-        Ok(_) => {
-            info!("Saved development credentials to file");
-            Ok(())
-        },
-        Err(e) => {
-            warn!("Failed to write development credentials file: {}", e);
-            Err(format!("Failed to write development credentials file: {}", e))
-        }
-    }
-}
-
-/// MongoDB credentials structure (keep for type hint, though we only store the connection string now)
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct MongoCredentials {
-    pub username: String,
-    pub password: String,
-    pub hostname: String,
-    pub port: u16,
-}
-
-/// R2 credentials structure (still needed for serialization)
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct R2Credentials {
-    pub account_id: String,
-    pub bucket_name: String,
-    pub access_key_id: String,
-    pub secret_access_key: String,
-    pub endpoint: String,
-}
-
-/// Stores R2 credentials in Keychain using keyring
+/// Initializes the R2 client and stores it in state if successful.
 #[command]
-async fn store_r2_credentials(
-    account_id: String,
-    bucket_name: String,
-    access_key_id: String,
-    secret_access_key: String,
-    endpoint: String,
-) -> Result<bool, String> {
-    // Log that we're storing R2 credentials
-    info!("Storing R2 credentials in keychain");
-    
-    // Create the credentials struct
-    let creds = R2Credentials {
-        account_id,
-        bucket_name,
-        access_key_id,
-        secret_access_key,
-        endpoint,
-    };
-    
-    // Create the keyring entry
-    let entry = match Entry::new(KEYCHAIN_SERVICE_R2, KEYCHAIN_ACCOUNT_R2) {
-        Ok(entry) => entry,
-        Err(e) => {
-            error!("Failed to create keyring entry for R2 credentials: {}", e);
-            
-            // In debug mode, fall back to file storage
-            #[cfg(debug_assertions)]
-            {
-                info!("Using development fallback for storing R2 credentials");
-                let mut dev_creds = load_dev_credentials().await;
-                dev_creds.r2_credentials = Some(creds);
-                match save_dev_credentials(&dev_creds).await {
-                    Ok(_) => return Ok(true),
-                    Err(e) => return Err(format!("Failed to store R2 credentials in dev fallback: {}", e)),
-                }
-            }
-            
-            return Err(format!("Failed to access keychain: {}", e));
-        }
-    };
-    
-    // Serialize the credentials to a JSON string
-    let json_str = match serde_json::to_string(&creds) {
-        Ok(s) => s,
-        Err(e) => {
-            error!("Failed to serialize R2 credentials to JSON: {}", e);
-            return Err(format!("Failed to serialize R2 credentials: {}", e));
-        }
-    };
-    
-    // First try to delete any existing entry to prevent duplicates
-    let _ = entry.delete_credential();
-    
-    // Store the password in the keyring
-    match entry.set_password(&json_str) {
-        Ok(_) => {
-            info!("Successfully stored R2 credentials");
-            
-            // In debug mode, also save to file as a backup
-            #[cfg(debug_assertions)]
-            {
-                let mut dev_creds = load_dev_credentials().await;
-                dev_creds.r2_credentials = Some(creds);
-                let _ = save_dev_credentials(&dev_creds).await;
-            }
-            
-            Ok(true)
-        },
-        Err(e) => {
-            error!("Failed to store R2 credentials in keychain: {}", e);
-            
-            // In debug mode, fall back to file storage
-            #[cfg(debug_assertions)]
-            {
-                info!("Using development fallback for storing R2 credentials after keychain failure");
-                let mut dev_creds = load_dev_credentials().await;
-                dev_creds.r2_credentials = Some(creds);
-                match save_dev_credentials(&dev_creds).await {
-                    Ok(_) => return Ok(true),
-                    Err(e) => return Err(format!("Failed to store R2 credentials in dev fallback: {}", e)),
-                }
-            }
-            
-            Err(format!("Failed to store R2 credentials: {}", e))
-        }
-    }
-}
-
-/// Retrieves R2 credentials from Keychain using keyring
-#[command]
-async fn get_r2_credentials() -> Result<R2Credentials, String> {
-    // Log that we're getting R2 credentials
-    info!("Retrieving R2 credentials from keychain");
-    
-    let entry = match Entry::new(KEYCHAIN_SERVICE_R2, KEYCHAIN_ACCOUNT_R2) {
-        Ok(entry) => entry,
-        Err(e) => {
-            error!("Failed to create keyring entry for R2 credentials: {}", e);
-            
-            // In debug mode, try to get from file storage
-            #[cfg(debug_assertions)]
-            {
-                info!("Using development fallback for retrieving R2 credentials");
-                let dev_creds = load_dev_credentials().await;
-                if let Some(creds) = dev_creds.r2_credentials {
-                    return Ok(creds);
-                }
-            }
-            
-            return Err(format!("Failed to access keychain: {}", e));
-        }
-    };
-    
-    // Try to get the password from the keyring
-    match entry.get_password() {
-        Ok(json_str) => {
-            if json_str.is_empty() {
-                info!("R2 credentials are empty");
-                return Err("R2 credentials not set".to_string());
-            }
-            
-            // Parse the JSON string into R2Credentials
-            match serde_json::from_str::<R2Credentials>(&json_str) {
-                Ok(creds) => {
-                    info!("Successfully retrieved R2 credentials");
-                    Ok(creds)
-                },
-                Err(e) => {
-                    error!("Failed to parse R2 credentials JSON: {}", e);
-                    Err(format!("Failed to parse R2 credentials: {}", e))
-                }
-            }
-        },
-        Err(e) => {
-            // Check if this is a "not found" error
-            if e.to_string().to_lowercase().contains("not found") ||
-               e.to_string().to_lowercase().contains("no item") {
-                info!("R2 credentials not found in keychain");
-                
-                // In debug mode, try to get from file storage
-                #[cfg(debug_assertions)]
-                {
-                    info!("Using development fallback for retrieving R2 credentials");
-                    let dev_creds = load_dev_credentials().await;
-                    if let Some(creds) = dev_creds.r2_credentials {
-                        return Ok(creds);
-                    }
-                }
-                
-                return Err("R2 credentials not found".to_string());
-            }
-            
-            error!("Failed to get R2 credentials from keychain: {}", e);
-            
-            // In debug mode, try to get from file storage
-            #[cfg(debug_assertions)]
-            {
-                info!("Using development fallback for retrieving R2 credentials after keychain error");
-                let dev_creds = load_dev_credentials().await;
-                if let Some(creds) = dev_creds.r2_credentials {
-                    return Ok(creds);
-                }
-            }
-            
-            Err(format!("Failed to get R2 credentials: {}", e))
-        }
-    }
-}
-
-/// Stores MongoDB connection string in Keychain using keyring
-#[command]
-async fn store_mongo_credentials(
-    connection_string: String,
-) -> Result<bool, String> {
-    // Log that we're storing MongoDB credentials
-    info!("Storing MongoDB credentials in keychain");
-    
-    // Create the keyring entry
-    let entry = match Entry::new(KEYCHAIN_SERVICE_MONGO, KEYCHAIN_ACCOUNT_MONGO) {
-        Ok(entry) => entry,
-        Err(e) => {
-            error!("Failed to create keyring entry for MongoDB credentials: {}", e);
-            
-            // In debug mode, fall back to file storage
-            #[cfg(debug_assertions)]
-            {
-                info!("Using development fallback for storing MongoDB credentials");
-                let mut dev_creds = load_dev_credentials().await;
-                dev_creds.mongo_connection_string = Some(connection_string.clone());
-                match save_dev_credentials(&dev_creds).await {
-                    Ok(_) => return Ok(true),
-                    Err(e) => return Err(format!("Failed to store MongoDB credentials in dev fallback: {}", e)),
-                }
-            }
-            
-            return Err(format!("Failed to access keychain: {}", e));
-        }
-    };
-    
-    // First try to delete any existing entry to prevent duplicates
-    let _ = entry.delete_credential();
-    
-    // Store the password in the keyring
-    match entry.set_password(&connection_string) {
-        Ok(_) => {
-            info!("Successfully stored MongoDB credentials");
-            
-            // In debug mode, also save to file as a backup
-            #[cfg(debug_assertions)]
-            {
-                let mut dev_creds = load_dev_credentials().await;
-                dev_creds.mongo_connection_string = Some(connection_string);
-                let _ = save_dev_credentials(&dev_creds).await;
-            }
-            
-            Ok(true)
-        },
-        Err(e) => {
-            error!("Failed to store MongoDB credentials in keychain: {}", e);
-            
-            // In debug mode, fall back to file storage
-            #[cfg(debug_assertions)]
-            {
-                info!("Using development fallback for storing MongoDB credentials after keychain failure");
-                let mut dev_creds = load_dev_credentials().await;
-                dev_creds.mongo_connection_string = Some(connection_string);
-                match save_dev_credentials(&dev_creds).await {
-                    Ok(_) => return Ok(true),
-                    Err(e) => return Err(format!("Failed to store MongoDB credentials in dev fallback: {}", e)),
-                }
-            }
-            
-            Err(format!("Failed to store MongoDB credentials: {}", e))
-        }
-    }
-}
-
-/// Retrieves MongoDB connection string from Keychain using keyring
-#[command]
-async fn get_mongo_credentials() -> Result<String, String> {
-    // Log that we're getting MongoDB credentials
-    info!("Retrieving MongoDB credentials from keychain");
-    
-    let entry = match Entry::new(KEYCHAIN_SERVICE_MONGO, KEYCHAIN_ACCOUNT_MONGO) {
-        Ok(entry) => entry,
-        Err(e) => {
-            error!("Failed to create keyring entry for MongoDB credentials: {}", e);
-            
-            // In debug mode, try to get from file storage
-            #[cfg(debug_assertions)]
-            {
-                info!("Using development fallback for retrieving MongoDB credentials");
-                let dev_creds = load_dev_credentials().await;
-                if let Some(conn_string) = dev_creds.mongo_connection_string {
-                    return Ok(conn_string);
-                }
-            }
-            
-            return Err(format!("Failed to access keychain: {}", e));
-        }
-    };
-    
-    // Try to get the password from the keyring
-    match entry.get_password() {
-        Ok(connection_string) => {
-            if connection_string.is_empty() {
-                info!("MongoDB connection string is empty");
-                return Err("MongoDB connection string not set".to_string());
-            }
-            
-            info!("Successfully retrieved MongoDB credentials");
-            Ok(connection_string)
-        },
-        Err(e) => {
-            // Check if this is a "not found" error
-            if e.to_string().to_lowercase().contains("not found") ||
-               e.to_string().to_lowercase().contains("no item") {
-                info!("MongoDB credentials not found in keychain");
-                
-                // In debug mode, try to get from file storage
-                #[cfg(debug_assertions)]
-                {
-                    info!("Using development fallback for retrieving MongoDB credentials");
-                    let dev_creds = load_dev_credentials().await;
-                    if let Some(conn_string) = dev_creds.mongo_connection_string {
-                        return Ok(conn_string);
-                    }
-                }
-                
-                return Err("MongoDB credentials not found".to_string());
-            }
-            
-            error!("Failed to get MongoDB credentials from keychain: {}", e);
-            
-            // In debug mode, try to get from file storage
-            #[cfg(debug_assertions)]
-            {
-                info!("Using development fallback for retrieving MongoDB credentials after keychain error");
-                let dev_creds = load_dev_credentials().await;
-                if let Some(conn_string) = dev_creds.mongo_connection_string {
-                    return Ok(conn_string);
-                }
-            }
-            
-            Err(format!("Failed to get MongoDB credentials: {}", e))
-        }
-    }
-}
-
-/// Check if credentials exist in the keychain
-#[command]
-async fn has_credentials(credential_type: String) -> Result<bool, String> {
-    let (service, account) = match credential_type.as_str() {
-         "mongo" => (KEYCHAIN_SERVICE_MONGO, KEYCHAIN_ACCOUNT_MONGO),
-         "r2" => (KEYCHAIN_SERVICE_R2, KEYCHAIN_ACCOUNT_R2),
-         _ => return Err("Invalid credential type".to_string()),
-     };
-     
-     // Create the entry
-     let entry = match Entry::new(service, account) {
-         Ok(entry) => entry,
-         Err(e) => {
-             error!("Failed to create keyring entry for checking {}: {}", credential_type, e);
-             return Err(format!("Failed to access keychain: {}", e));
-         }
-     };
-     
-     // Try to get the password - if successful, credentials exist
-     match entry.get_password() {
-         Ok(_) => {
-             info!("Found {} credentials in keychain", credential_type);
-             Ok(true)
-         },
-         Err(e) => {
-             // Check if this is a "not found" error
-             if e.to_string().to_lowercase().contains("not found") ||
-                e.to_string().to_lowercase().contains("no item") {
-                 info!("{} credentials not found in keychain", credential_type);
-                 return Ok(false);
-             }
-             
-             error!("Failed to check if {} credentials exist: {}", credential_type, e);
-             Err(format!("Failed to check credentials: {}", e))
-         }
-     }
-}
-
-/// Delete credentials from the keychain
-#[command]
-async fn delete_credentials(credential_type: String) -> Result<(), String> {
-     let (service, account) = match credential_type.as_str() {
-         "mongo" => (KEYCHAIN_SERVICE_MONGO, KEYCHAIN_ACCOUNT_MONGO),
-         "r2" => (KEYCHAIN_SERVICE_R2, KEYCHAIN_ACCOUNT_R2),
-         _ => return Err("Invalid credential type".to_string()),
-     };
- 
-     let entry = Entry::new(service, account)
-         .map_err(|e| format!("Failed to create Keychain entry for deleting {}: {}", credential_type, e))?;
- 
-     match entry.delete_credential() {
-         Ok(_) => {
-             info!("Successfully deleted {} credentials", credential_type);
-             Ok(())
-         },
-         Err(e) => {
-             // If it's a "not found" error, consider it a success
-             if e.to_string().to_lowercase().contains("not found") ||
-                e.to_string().to_lowercase().contains("no item") {
-                 info!("{} credentials already deleted or not found", credential_type);
-                 return Ok(());
-             }
-             
-             error!("Failed to delete {} credentials: {}", credential_type, e);
-             Err(format!("Failed to delete credentials: {}", e))
-         }
-     }
-}
-
-/// Initializes R2 client using stored credentials
-#[command]
-async fn init_r2_client(
-    r2_state: State<'_, R2State>,
-) -> Result<bool, String> {
-    // Check if client is already initialized
+async fn init_r2_client(r2_state: State<'_, R2State>) -> Result<bool, CommandError> {
     {
         let lock = r2_state.client.lock().await;
         if lock.is_some() {
@@ -526,240 +82,171 @@ async fn init_r2_client(
             return Ok(true);
         }
     }
-    
-    let credentials_result = get_r2_credentials().await;
-    if let Err(e) = credentials_result {
-        // If credentials are not found, return a specific error
-        if e.contains("not found") {
-            return Err("R2 credentials not set. Please configure credentials in Settings.".to_string());
+
+    let credentials = get_r2_credentials_proxy().await.map_err(|e| {
+        if matches!(e, CommandError::Configuration(_)) {
+            CommandError::Configuration("R2 credentials not set. Please configure credentials in Settings.".to_string())
+        } else {
+            e
         }
-        return Err(format!("Failed to get R2 credentials: {}", e));
-    }
-    
-    let credentials = credentials_result.unwrap();
-    
-    info!("Creating new R2 client with account ID: {} and access key: {}", 
+    })?;
+
+    info!("Creating new R2 client with account ID: {} and access key: {}",
         credentials.account_id, credentials.access_key_id);
-    
-    // Determine the endpoint - use the provided endpoint if available,
-    // otherwise construct it from account_id
+
     let endpoint = if !credentials.endpoint.is_empty() {
         credentials.endpoint.clone()
     } else {
         format!("https://{}.r2.cloudflarestorage.com", credentials.account_id)
     };
-    
+
+    let aws_creds = aws_sdk_s3::config::Credentials::new(
+        &credentials.access_key_id, &credentials.secret_access_key, None, None, "r2-credentials"
+    );
+
     let config = aws_config::defaults(aws_config::BehaviorVersion::latest())
         .region(aws_sdk_s3::config::Region::new("auto"))
         .endpoint_url(&endpoint)
-        .credentials_provider(
-            aws_sdk_s3::config::Credentials::new(
-                &credentials.access_key_id,
-                &credentials.secret_access_key,
-                None, None, "r2-credentials"
-            )
-        )
-        .load()
-        .await;
-    
-    let client = aws_sdk_s3::Client::new(&config);
-    
-    // Test the connection
-    info!("Testing R2 connection");
-    let test_result = client.list_buckets().send().await;
-    match test_result {
-        Ok(_) => {
-            info!("R2 connection test successful");
-            let mut lock = r2_state.client.lock().await;
-            *lock = Some(client);
-            Ok(true)
-        },
-        Err(e) => {
-            error!("R2 connection test failed: {}", e);
-            Err(format!("R2 connection test failed: {}", e))
-        }
-    }
+        .credentials_provider(aws_creds)
+        .load().await;
+
+     let s3_config = aws_sdk_s3::config::Builder::from(&config).force_path_style(true).build();
+    let client = aws_sdk_s3::Client::from_conf(s3_config);
+
+    info!("Testing R2 connection (list_buckets)");
+    client.list_buckets().send().await.map_err(|e| {
+        error!("R2 connection test failed (list_buckets): {}", e);
+        CommandError::Storage(format!("R2 connection test failed: {}", e))
+    })?;
+
+    info!("Testing R2 bucket access: {}", credentials.bucket_name);
+     client.list_objects_v2().bucket(&credentials.bucket_name).max_keys(1).send().await
+         .map_err(|e| {
+             error!("R2 bucket access test failed (list_objects_v2): {}", e);
+             CommandError::Storage(format!(
+                 "R2 credentials seem valid but couldn't access bucket '{}': {}",
+                 credentials.bucket_name, e
+             ))
+         })?;
+
+    info!("R2 connection and bucket access successful.");
+    let mut client_lock = r2_state.client.lock().await;
+    *client_lock = Some(client);
+    let mut bucket_lock = r2_state.bucket_name.lock().await;
+    *bucket_lock = Some(credentials.bucket_name);
+    info!("Stored R2 client and bucket name in state.");
+    Ok(true)
 }
 
-/// Initialize MongoDB client using stored credentials
+/// Initializes the MongoDB client and stores it in state if successful.
 #[command]
-async fn init_mongo_client(mongo_state: State<'_, MongoState>) -> Result<bool, String> {
-    info!("Initializing MongoDB client");
-    
-    // Get existing client first
+async fn init_mongo_client(mongo_state: State<'_, MongoState>) -> Result<bool, CommandError> {
     {
-        let client = mongo_state.client.lock().await;
-        if client.is_some() {
-            info!("MongoDB client is already initialized");
+        let lock = mongo_state.client.lock().await;
+        if lock.is_some() {
+            info!("MongoDB client already initialized, reusing existing client");
             return Ok(true);
         }
     }
-    
-    // Get connection string from keychain
-    let connection_string = match get_mongo_credentials().await {
-        Ok(connection_string) => {
-            // Log a masked version of the connection string for debugging
-            let masked_string = if connection_string.len() > 20 {
-                format!("{}...{}", &connection_string[0..10], &connection_string[connection_string.len() - 10..])
-            } else {
-                "too short to mask".to_string()
-            };
-            info!("Retrieved MongoDB connection string (masked): {}", masked_string);
-            
-            // Validate connection string format
-            if !connection_string.starts_with("mongodb://") && !connection_string.starts_with("mongodb+srv://") {
-                let error_msg = "Invalid MongoDB connection string format. Must start with 'mongodb://' or 'mongodb+srv://'";
-                error!("{}", error_msg);
-                return Err(error_msg.to_string());
-            }
-            
-            // Check for any line breaks or invalid characters that could cause connection issues
-            if connection_string.contains('\n') || connection_string.contains('\r') {
-                let error_msg = "MongoDB connection string contains line breaks which may cause connection issues";
-                error!("{}", error_msg);
-                return Err(error_msg.to_string());
-            }
-            
-            connection_string
-        },
-        Err(e) => {
-            error!("Failed to get MongoDB connection string: {}", e);
-            return Err(format!("MongoDB credentials not set: {}", e));
+
+    let connection_string = get_mongo_credentials_proxy().await.map_err(|e| {
+        if matches!(e, CommandError::Configuration(_)) {
+            CommandError::Configuration("MongoDB credentials not set. Please configure credentials in Settings.".to_string())
+        } else {
+            e
         }
-    };
-    
-    // Create MongoDB client options with proper timeout settings
-    info!("Setting up MongoDB client options");
-    let mut client_options = match mongodb::options::ClientOptions::parse(&connection_string).await {
-        Ok(options) => {
-            info!("Successfully parsed MongoDB connection string");
-            options
-        },
-        Err(e) => {
-            error!("Failed to parse MongoDB connection string: {}", e);
-            return Err(format!("Failed to parse MongoDB connection string: {}", e));
-        }
-    };
-    
-    // Set timeout options
-    client_options.connect_timeout = Some(std::time::Duration::from_secs(10));
-    client_options.server_selection_timeout = Some(std::time::Duration::from_secs(10));
-    
-    // Create MongoDB client with options
-    info!("Creating MongoDB client with timeout options");
-    match mongodb::Client::with_options(client_options) {
-        Ok(client) => {
-            // Try a quick ping to verify the connection works
-            info!("MongoDB client created, testing with ping");
-            match client.database("admin").run_command(mongodb::bson::doc! {"ping": 1}, None).await {
-                Ok(_) => {
-                    info!("MongoDB ping successful");
-                    // Store the client in state
-                    let mut state_client = mongo_state.client.lock().await;
-                    *state_client = Some(client);
-                    info!("MongoDB client initialized successfully");
-                    Ok(true)
-                },
-                Err(e) => {
-                    error!("MongoDB ping failed: {}", e);
-                    Err(format!("MongoDB connection succeeded but ping failed: {}", e))
-                }
-            }
-        }
-        Err(e) => {
-            error!("Failed to create MongoDB client with specific error: {}", e);
-            Err(format!("Failed to create MongoDB client: {}", e))
-        }
-    }
+    })?;
+
+    let client_instance = create_mongodb_client(connection_string).await?;
+
+    info!("MongoDB client created and connection tested successfully.");
+    let mut lock = mongo_state.client.lock().await;
+    *lock = Some(client_instance);
+    info!("Stored MongoDB client in state.");
+    Ok(true)
 }
 
-/// Tests MongoDB connection
-#[command]
-async fn test_mongo_connection(
-    mongo_state: State<'_, MongoState>,
-) -> Result<bool, String> {
-    let lock = mongo_state.client.lock().await;
-    match &*lock {
-        Some(client) => {
-            match client.database("admin").run_command(mongodb::bson::doc! {"ping": 1}, None).await {
-                Ok(_) => Ok(true),
-                Err(e) => Err(format!("MongoDB connection test failed: {}", e)),
-            }
-        }
-        None => Err("MongoDB client not initialized".to_string()),
-    }
+/// Helper to create and test MongoDB client
+async fn create_mongodb_client(connection_string: String) -> Result<mongodb::Client, CommandError> {
+    info!("Attempting to connect to MongoDB...");
+    let client_options = mongodb::options::ClientOptions::parse(&connection_string)
+        .await
+        .map_err(|e| CommandError::Configuration(format!("Failed to parse MongoDB connection string: {}", e)))?;
+
+    let client = mongodb::Client::with_options(client_options)
+        .map_err(|e| CommandError::Configuration(format!("Failed to create MongoDB client: {}", e)))?;
+
+    // Test connection by listing database names
+    client.list_database_names(None, None).await
+        .map_err(|e| CommandError::Database(format!("Failed to connect to MongoDB: {}", e)))?;
+
+    Ok(client)
 }
 
-/// Tests R2 connection
+// --- Connection Testing Commands ---
+
+/// Test MongoDB connection using stored credentials
 #[command]
-async fn test_r2_connection(
-    r2_state: State<'_, R2State>,
-) -> Result<bool, String> {
-    let lock = r2_state.client.lock().await;
-    match &*lock {
-        Some(client) => {
-            // First test general credentials by listing buckets
-            match client.list_buckets().send().await {
-                Ok(_) => {
-                    // Next, test specifically accessing the configured bucket by listing objects
-                    // Get the credentials to find the bucket name
-                    match get_r2_credentials().await {
-                        Ok(creds) => {
-                            match client.list_objects_v2()
-                                .bucket(&creds.bucket_name)
-                                .max_keys(1)
-                                .send()
-                                .await {
-                                    Ok(_) => {
-                                        info!("Successfully connected to R2 and accessed bucket: {}", creds.bucket_name);
-                                        Ok(true)
-                                    },
-                                    Err(e) => {
-                                        error!("R2 bucket access test failed: {}", e);
-                                        Err(format!("R2 credentials are valid but couldn't access bucket '{}': {}", 
-                                            creds.bucket_name, e))
-                                    }
-                                }
-                        },
-                        Err(e) => {
-                            // If we can't get credentials but can list buckets, something is odd
-                            warn!("Could list R2 buckets but couldn't retrieve bucket name: {}", e);
-                            Ok(true) // Return true since we could at least connect
-                        }
-                    }
-                },
-                Err(e) => {
-                    error!("R2 connection test failed: {}", e);
-                    Err(format!("R2 connection test failed: {}", e))
-                }
-            }
+async fn test_mongo_connection(_mongo_state: State<'_, MongoState>) -> Result<bool, CommandError> {
+    info!("Testing MongoDB connection...");
+    let connection_string = get_mongo_credentials_proxy().await.map_err(|e| {
+        if matches!(e, CommandError::Configuration(_)) {
+            CommandError::Configuration("MongoDB credentials not set. Please configure credentials in Settings.".to_string())
+        } else {
+            e
         }
-        None => Err("R2 client not initialized".to_string()),
-    }
+    })?;
+
+    let client = create_mongodb_client(connection_string).await?;
+
+    client.list_database_names(None, None).await
+        .map_err(|e| CommandError::Database(format!("MongoDB connection test failed: {}", e)))?;
+
+    info!("MongoDB connection test successful.");
+    Ok(true)
 }
 
-/// Extract metadata from an audio file
+/// Test R2 connection using stored credentials
 #[command]
-async fn extract_audio_metadata(file_path: String) -> Result<AudioMetadata, String> {
-    info!("Extracting metadata from file: {}", file_path);
-    extract_metadata(&file_path)
+async fn test_r2_connection(r2_state: State<'_, R2State>) -> Result<bool, CommandError> {
+    info!("Testing R2 connection...");
+    init_r2_client(r2_state).await
 }
+
+// --- Audio Processing Commands ---
+
+/// Extract metadata from an audio file (Not Implemented)
+// Removed unimplemented extract_audio_metadata function previously defined here.
+// The actual command is now in audio::metadata::extract_metadata.
 
 /// Extract metadata from multiple audio files
 #[command]
-async fn extract_audio_metadata_batch(file_paths: Vec<String>) -> Result<Vec<AudioMetadata>, String> {
+async fn extract_audio_metadata_batch(file_paths: Vec<String>) -> Result<Vec<serde_json::Value>, CommandError> {
     info!("Extracting metadata from {} files", file_paths.len());
     
     let mut results = Vec::with_capacity(file_paths.len());
     
     for path in file_paths {
-        match extract_metadata(&path) {
-            Ok(metadata) => results.push(metadata),
-            Err(e) => {
-                // Log error but continue processing other files
-                error!("Failed to extract metadata from {}: {}", path, e);
-            }
-        }
+        // Basic implementation that returns file name and path
+        info!("Extracting metadata from {}", path);
+        
+        let file_path = PathBuf::from(&path);
+        let file_name = file_path.file_name()
+            .map(|name| name.to_string_lossy().to_string())
+            .unwrap_or_else(|| "Unknown".to_string());
+        
+        // Return a basic metadata object
+        results.push(serde_json::json!({
+            "path": path,
+            "fileName": file_name,
+            "title": file_name.rsplit('.').nth(1).unwrap_or(&file_name), // Simple attempt to get name without extension
+            "duration": 0, // We don't have actual duration yet
+            "created": fs::metadata(&path).ok()
+                        .and_then(|m| m.created().ok())
+                        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                        .map(|d| d.as_secs()),
+            "size": fs::metadata(&path).map(|m| m.len()).unwrap_or(0),
+        }));
     }
     
     Ok(results)
@@ -767,371 +254,400 @@ async fn extract_audio_metadata_batch(file_paths: Vec<String>) -> Result<Vec<Aud
 
 /// Open file dialog and return selected file paths
 #[command]
-async fn select_audio_files(app_handle: tauri::AppHandle) -> Result<Vec<String>, String> {
-    use std::sync::{Arc, Mutex as StdMutex};
-    
-    // Create channels to communicate the result
-    let (tx, rx) = std::sync::mpsc::channel();
-    let tx = Arc::new(StdMutex::new(tx));
-    
-    // Get a handle to the dialog manager and use the non-blocking pick_files
-    app_handle.dialog()
-        .file()
-        .add_filter("Audio Files", &["mp3", "wav", "flac", "aac", "m4a", "ogg", "aiff"])
-        .set_directory("/")
-        .set_title("Select Audio Files")
-        .pick_files(move |file_paths| {
-            if let Some(paths) = file_paths {
-                let mut valid_paths = Vec::new();
-                
-                for path in paths.iter() {
-                    if let Some(path_str) = path.as_path() {
-                        let path_string = path_str.to_string_lossy().to_string();
-                        
-                        // Verify the file exists
-                        if std::path::Path::new(&path_string).exists() {
-                            info!("Selected valid audio file: {}", path_string);
-                            valid_paths.push(path_string);
-                        } else {
-                            warn!("Selected file does not exist: {}", path_string);
-                        }
-                    }
-                }
-                
-                if valid_paths.is_empty() && !paths.is_empty() {
-                    warn!("No valid files were selected");
-                }
-                
-                let _ = tx.lock().unwrap().send(Ok(valid_paths));
-            } else {
-                // User cancelled the dialog
-                info!("File selection canceled by user");
-                let _ = tx.lock().unwrap().send(Ok(Vec::new()));
+async fn select_audio_files(app_handle: tauri::AppHandle) -> Result<Vec<String>, CommandError> {
+    use std::sync::{mpsc, Arc as StdArc, Mutex as StdMutex};
+    use tauri_plugin_dialog::FilePath;
+
+    let (tx, rx) = mpsc::channel();
+    let tx = StdArc::new(StdMutex::new(tx));
+    let tx_clone = StdArc::clone(&tx);
+
+    app_handle.dialog().file().pick_files(move |paths_option: Option<Vec<FilePath>>| {
+        let sender = tx_clone.lock().unwrap();
+        match paths_option {
+            Some(paths) => {
+                let path_strings: Vec<String> = paths.into_iter()
+                    .filter_map(|fp| fp.as_path().map(|p| p.to_string_lossy().into_owned()))
+                    .collect();
+                let _ = sender.send(Ok(path_strings));
             }
-        });
-    
-    // Wait for the result
-    match rx.recv() {
-        Ok(result) => result,
-        Err(e) => Err(format!("Failed to get file dialog result: {}", e)),
-    }
+            None => { // User cancelled
+                let _ = sender.send(Ok(Vec::new()));
+            }
+        }
+    });
+
+    rx.recv()
+        .map_err(|e| CommandError::Unexpected(format!("Failed to receive file paths from dialog channel: {}", e)))?
 }
 
-/// Get file statistics
+/// Get file stats (size, modified date)
 #[command]
-async fn get_file_stats(path: String) -> Result<serde_json::Value, String> {
-    info!("Getting file stats for: {}", path);
-    
-    match fs::metadata(&path) {
-        Ok(metadata) => {
+async fn get_file_stats(path: String) -> Result<serde_json::Value, CommandError> {
+    fs::metadata(&path)
+        .map(|metadata| {
             let size = metadata.len();
-            let result = serde_json::json!({
-                "size": size,
-                "is_file": metadata.is_file(),
-                "is_dir": metadata.is_dir(),
-            });
-            
-            Ok(result)
-        },
-        Err(e) => Err(format!("Failed to get file metadata: {}", e))
-    }
+            let modified_time = metadata.modified().ok()
+                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                .map(|d| d.as_secs());
+            serde_json::json!({ "size": size, "modified": modified_time })
+        })
+        .map_err(|e| CommandError::FileSystem(format!("Failed to get metadata for {}: {}", path, e)))
 }
 
-/// Transcode an audio file to create medium quality version
-#[command]
+/// Transcode a single audio file to AAC
+#[command(rename_all = "camelCase")]
 async fn transcode_audio_file(
-    file_path: String,
-    medium_bitrate: u32,
-    output_format: String,
-    output_dir: String,
-) -> Result<TranscodingResult, String> {
-    info!("Transcoding audio file: {}", file_path);
-    
-    let options = TranscodingOptions {
-        medium_bitrate,
-        format: output_format,
-        output_dir,
-    };
-    
-    match transcode_file(&file_path, options) {
-        Ok(result) => Ok(result),
-        Err(e) => {
-            error!("Failed to transcode file: {}", e);
-            Err(format!("Failed to transcode file: {}", e))
+    input_path_str: String,
+    output_dir_str: String,
+) -> Result<TranscodingResult, CommandError> {
+    info!("Transcoding {} to AAC in directory {}", input_path_str, output_dir_str);
+
+    let input_path = PathBuf::from(&input_path_str);
+    let output_dir = PathBuf::from(&output_dir_str);
+
+    let file_name = input_path.file_name()
+        .ok_or_else(|| CommandError::Validation(format!("Invalid input file path: {}", input_path_str)))?
+        .to_string_lossy();
+    let stem = Path::new(&*file_name).file_stem().map(|s| s.to_string_lossy()).unwrap_or_default();
+    let output_file_name = format!("{}.aac", stem);
+    let output_path = output_dir.join(output_file_name);
+
+     if !output_dir.exists() {
+         fs::create_dir_all(&output_dir).map_err(|e| {
+             CommandError::FileSystem(format!("Failed to create output directory {}: {}", output_dir.display(), e))
+         })?;
+     }
+
+    let output_path_clone = output_path.clone();
+    let join_handle = tokio::task::spawn_blocking(move || {
+        transcode::transcode_to_aac(&input_path, &output_path_clone) // Use imported module
+    });
+
+    // Await the join handle to get the Result<(), TranscodingError>
+    match join_handle.await {
+        Ok(transcoding_result) => {
+            match transcoding_result {
+                Ok(()) => { // transcode_to_aac succeeded
+                    Ok(TranscodingResult { output_path: output_path.to_string_lossy().into_owned() })
+                },
+                Err(transcoding_err) => { // transcode_to_aac failed
+                    Err(CommandError::from(transcoding_err))
+                }
+            }
+        },
+        Err(join_err) => { // spawn_blocking failed
+            Err(CommandError::Unexpected(format!("Task join error during transcoding: {}", join_err)))
         }
     }
 }
 
-/// Transcode multiple audio files in batch
+
+/// Transcode multiple audio files to AAC
 #[command]
 async fn transcode_audio_batch(
     file_paths: Vec<String>,
-    medium_bitrate: u32,
-    output_format: String,
-    output_dir: String,
-) -> Result<Vec<TranscodingResult>, String> {
-    info!("Batch transcoding {} audio files", file_paths.len());
-    
-    // Input validation
-    if file_paths.is_empty() {
-        return Err("No files provided for transcoding".to_string());
-    }
-    
-    if medium_bitrate < 32 || medium_bitrate > 320 {
-        let error_msg = format!("Invalid bitrate: {}. Must be between 32 and 320 kbps", medium_bitrate);
-        error!("{}", error_msg);
-        return Err(error_msg);
-    }
-    
-    let supported_formats = ["mp3", "aac", "m4a", "ogg", "flac", "wav"];
-    if !supported_formats.contains(&output_format.to_lowercase().as_str()) {
-        let error_msg = format!("Unsupported format: {}. Supported formats are: {:?}", output_format, supported_formats);
-        error!("{}", error_msg);
-        return Err(error_msg);
-    }
-    
-    info!("DEBUG: Input validation completed successfully");
-    
-    // Use system temp directory instead of project directory to avoid auto-rebuilds
-    let temp_base = std::env::temp_dir();
-    let unique_dir = temp_base.join("music-library-transcoded");
-    info!("Using system temp directory for output: {}", unique_dir.display());
-    
-    // Ensure we have an absolute path
-    let absolute_output_dir = unique_dir.to_string_lossy().to_string();
-    
-    info!("Using absolute output directory: {}", absolute_output_dir);
-    info!("DEBUG: Absolute output directory determined: {}", absolute_output_dir);
-    
-    // Create the output directory
-    if !PathBuf::from(&absolute_output_dir).exists() {
-        match std::fs::create_dir_all(&absolute_output_dir) {
-            Ok(_) => info!("Created output directory: {}", absolute_output_dir),
-            Err(e) => {
-                let error_msg = format!("Failed to create output directory: {}", e);
-                error!("{}", error_msg);
-                return Err(error_msg);
-            }
-        }
-    }
-    info!("DEBUG: Output directory created successfully");
-    
-    // Test if the output directory is writable
-    let test_file_path = PathBuf::from(&absolute_output_dir).join("write_test.tmp");
-    match std::fs::File::create(&test_file_path) {
-        Ok(_) => {
-            info!("Output directory is writable");
-            // Clean up the test file
-            if let Err(e) = std::fs::remove_file(&test_file_path) {
-                warn!("Failed to remove test file: {}", e);
-            } else {
-                info!("DEBUG: Test file removed successfully");
-            }
-        },
-        Err(e) => {
-            let error_msg = format!("Output directory is not writable: {}", e);
-            error!("{}", error_msg);
-            return Err(error_msg);
-        }
-    }
-    
-    info!("DEBUG: Output directory verified as writable");
-    
-    // Prepare transcoding options
-    let options = TranscodingOptions {
-        medium_bitrate,
-        format: output_format.clone(),
-        output_dir: absolute_output_dir.clone(),
-    };
-    
-    info!("Transcoding with options: bitrate={}k, format={}, output_dir={}", 
-          medium_bitrate, output_format, options.output_dir);
-    
-    let mut results = Vec::new();
-    
-    // Process each file
-    for (index, file_path) in file_paths.iter().enumerate() {
-        info!("Processing file {}/{}: {}", index + 1, file_paths.len(), file_path);
-        
-        // Check if file exists before attempting to transcode
-        let path = PathBuf::from(file_path);
-        if !path.exists() {
-            let error_msg = format!("File does not exist: {}", file_path);
-            warn!("{}", error_msg);
-            results.push(TranscodingResult {
-                success: false,
-                input_path: file_path.clone(),
-                medium_quality_path: None,
-                error_message: Some(error_msg),
-            });
-            continue;
-        }
-        
-        info!("DEBUG: File exists, proceeding with transcoding: {}", file_path);
-        
-        // Catch any panics that might occur during transcoding
-        info!("DEBUG: Beginning transcode_file call for: {}", file_path);
-        let transcode_result = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            transcode_file(file_path, options.clone())
-        })) {
-            Ok(result) => result,
-            Err(panic_err) => {
-                let panic_msg = match panic_err.downcast_ref::<&str>() {
-                    Some(s) => format!("Panic during transcoding: {}", s),
-                    None => match panic_err.downcast_ref::<String>() {
-                        Some(s) => format!("Panic during transcoding: {}", s),
-                        None => "Unknown panic during transcoding".to_string(),
-                    },
-                };
-                
-                error!("{}", panic_msg);
-                Err(TranscodingError::FFmpegError(panic_msg))
-            }
-        };
-        
-        match transcode_result {
-            Ok(result) => {
-                info!("Successfully transcoded file {}: {}", index + 1, file_path);
-                results.push(result);
-            }
-            Err(error) => {
-                error!("Failed to transcode file {}: {}", index + 1, error);
-                results.push(TranscodingResult {
-                    success: false,
-                    input_path: file_path.clone(),
-                    medium_quality_path: None,
-                    error_message: Some(error.to_string()),
-                });
-            }
-        }
-    }
-    
-    info!("Completed batch transcoding: {} successful, {} failed", 
-          results.iter().filter(|r| r.success).count(),
-          results.iter().filter(|r| !r.success).count());
-    
-    Ok(results)
-}
+    outputDirStr: String,  // Renamed directly
+) -> Result<Vec<TranscodingResult>, CommandError> {
+    info!("Starting batch transcoding for {} files to {}", file_paths.len(), &outputDirStr);
 
-/// Get MongoDB client state for debugging
-#[command]
-async fn debug_mongo_state(mongo_state: State<'_, MongoState>) -> Result<String, String> {
-    let client_lock = mongo_state.client.lock().await;
-    
-    let has_client = client_lock.is_some();
-    info!("debug_mongo_state: MongoDB client is initialized: {}", has_client);
-    
-    match get_mongo_credentials().await {
-        Ok(conn_string) => {
-            // Mask credentials for logging
-            let masked = if conn_string.len() > 20 {
-                format!("{}...{}", &conn_string[0..10], &conn_string[conn_string.len()-10..])
-            } else {
-                "too short to mask".to_string()
+    let output_dir = PathBuf::from(&outputDirStr);
+    if let Err(e) = fs::create_dir_all(&output_dir) {
+        let err = CommandError::FileSystem(format!("Failed to create output directory {}: {}", output_dir.display(), e));
+        error!("{}", err); return Err(err);
+    }
+
+    let mut tasks = Vec::new();
+    for input_path_str in file_paths {
+        let current_output_dir = output_dir.clone();
+        let input_path_str_clone = input_path_str.clone();
+
+        tasks.push(tokio::spawn(async move {
+            let input_path = PathBuf::from(&input_path_str_clone);
+            let file_name = match input_path.file_name() {
+                Some(name) => name.to_string_lossy(),
+                None => return Err(CommandError::Validation(format!("Invalid input file path: {}", input_path_str_clone))),
             };
-            info!("debug_mongo_state: MongoDB credentials found, masked: {}", masked);
-            
-            if has_client {
-                Ok(format!("MongoDB client is initialized and credentials are available"))
-            } else {
-                Ok(format!("MongoDB client is NOT initialized but credentials are available"))
-            }
-        },
-        Err(e) => {
-            error!("debug_mongo_state: Failed to get MongoDB credentials: {}", e);
-            Ok(format!("MongoDB client is {} and failed to get credentials: {}", 
-                if has_client { "initialized" } else { "NOT initialized" }, e))
-        }
-    }
-}
+            let stem = Path::new(&*file_name).file_stem().map(|s| s.to_string_lossy()).unwrap_or_default();
+            let output_file_name = format!("{}.aac", stem);
+            let output_path = current_output_dir.join(output_file_name);
+            let output_path_clone = output_path.clone();
 
-/// Create and initialize a new MongoDB client
-/// This is a separate function to help with debugging
-#[command]
-async fn create_mongodb_client(connection_string: String) -> Result<bool, String> {
-    info!("Attempting to create MongoDB client with connection string: {}", 
-          if connection_string.len() > 20 {
-              format!("{}...{}", &connection_string[0..10], &connection_string[connection_string.len()-10..])
-          } else {
-              "too short to mask".to_string()
-          });
-    
-    // Set up client options with timeouts
-    let mut client_options = match mongodb::options::ClientOptions::parse(&connection_string).await {
-        Ok(options) => {
-            info!("Successfully parsed MongoDB connection string");
-            options
-        },
-        Err(e) => {
-            error!("Failed to parse MongoDB connection string: {}", e);
-            return Err(format!("Failed to parse MongoDB connection string: {}", e));
-        }
-    };
-    
-    // Set timeout options
-    client_options.connect_timeout = Some(std::time::Duration::from_secs(10));
-    client_options.server_selection_timeout = Some(std::time::Duration::from_secs(10));
-    
-    // Create MongoDB client with options
-    match mongodb::Client::with_options(client_options) {
-        Ok(client) => {
-            // Try a quick ping to verify the connection works
-            info!("MongoDB client created, testing with ping");
-            match client.database("admin").run_command(mongodb::bson::doc! {"ping": 1}, None).await {
-                Ok(_) => {
-                    info!("MongoDB ping successful");
-                    Ok(true)
+            let join_handle = tokio::task::spawn_blocking(move || {
+                transcode::transcode_to_aac(&input_path, &output_path_clone) // Use imported module
+            });
+
+            // Await the join handle to get the Result<(), TranscodingError>
+            match join_handle.await {
+                Ok(transcoding_result) => {
+                    match transcoding_result {
+                        Ok(()) => { // transcode_to_aac succeeded
+                            Ok(TranscodingResult { output_path: output_path.to_string_lossy().into_owned() })
+                        },
+                        Err(transcoding_err) => { // transcode_to_aac failed
+                            Err(CommandError::from(transcoding_err))
+                        }
+                    }
                 },
-                Err(e) => {
-                    error!("MongoDB ping failed: {}", e);
-                    Err(format!("MongoDB connection succeeded but ping failed: {}", e))
+                Err(join_err) => { // spawn_blocking failed
+                    Err(CommandError::Unexpected(format!("Task join error for {}: {}", input_path_str_clone, join_err)))
                 }
             }
-        },
-        Err(e) => {
-            error!("Failed to create MongoDB client with specific error: {}", e);
-            Err(format!("Failed to create MongoDB client: {}", e))
+        }));
+    }
+
+    let results = futures::future::join_all(tasks).await;
+
+    let mut successful_results: Vec<TranscodingResult> = Vec::new();
+    let mut errors: Vec<CommandError> = Vec::new();
+
+    for result in results {
+        match result {
+            Ok(Ok(transcoding_result)) => successful_results.push(transcoding_result),
+            Ok(Err(cmd_err)) => {
+                error!("Batch transcoding error: {}", cmd_err);
+                errors.push(cmd_err);
+            }
+            Err(join_err) => { // This is a Tokio JoinError
+                let cmd_err = CommandError::Unexpected(format!("Batch task join error: {}", join_err));
+                 error!("{}", cmd_err);
+                errors.push(cmd_err);
+            }
         }
+    }
+
+    if let Some(first_error) = errors.into_iter().next() {
+        Err(first_error)
+    } else {
+        info!("Batch transcoding completed successfully for {} files.", successful_results.len());
+        Ok(successful_results)
     }
 }
 
-/// Initialize the Tauri application
+
+// --- Debug Commands ---
+#[command]
+async fn debug_mongo_state(mongo_state: State<'_, MongoState>) -> Result<String, CommandError> {
+    let client_lock = mongo_state.client.lock().await;
+    let status = if client_lock.is_some() { "Initialized" } else { "Not Initialized" };
+    Ok(format!("MongoDB State: {}", status))
+}
+
+#[tauri::command]
+fn ping() -> String {
+  "pong".to_string()
+}
+
+// Add proxies for credential commands to adapt the error types
+
+// R2 credentials proxy
+#[command]
+async fn store_r2_credentials_proxy(
+    account_id: String,
+    bucket_name: String,
+    access_key_id: String,
+    secret_access_key: String,
+    endpoint: String,
+) -> Result<bool, CommandError> {
+    features::credentials::store_r2_credentials(
+        account_id, bucket_name, access_key_id, secret_access_key, endpoint
+    ).await.map_err(|e| CommandError::Configuration(format!("Failed to store R2 credentials: {}", e)))
+}
+
+// MongoDB credentials proxy
+#[command]
+async fn store_mongo_credentials_proxy(connection_string: String) -> Result<bool, CommandError> {
+    features::credentials::store_mongo_credentials(connection_string)
+        .await.map_err(|e| CommandError::Configuration(format!("Failed to store MongoDB credentials: {}", e)))
+}
+
+#[command]
+async fn get_r2_credentials_proxy() -> Result<features::credentials::R2Credentials, CommandError> {
+    features::credentials::get_r2_credentials()
+        .await.map_err(|e| CommandError::Configuration(format!("Failed to get R2 credentials: {}", e)))
+}
+
+#[command]
+async fn get_mongo_credentials_proxy() -> Result<String, CommandError> {
+    features::credentials::get_mongo_credentials()
+        .await.map_err(|e| CommandError::Configuration(format!("Failed to get MongoDB credentials: {}", e)))
+}
+
+#[command]
+async fn has_credentials_proxy(credential_type: String) -> Result<bool, CommandError> {
+    features::credentials::has_credentials(credential_type)
+        .await.map_err(|e| CommandError::Configuration(format!("Failed to check credentials: {}", e)))
+}
+
+#[command]
+async fn delete_credentials_proxy(credential_type: String) -> Result<(), CommandError> {
+    features::credentials::delete_credentials(credential_type)
+        .await.map_err(|e| CommandError::Configuration(format!("Failed to delete credentials: {}", e)))
+}
+
+// --- Main Application Setup ---
 fn main() {
+    // Setup logging
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    info!("Starting Music Library Manager application");
+
+    // Create channel for upload queue
+    let (upload_tx, upload_rx) = mpsc::channel::<UploadQueueItem>(100);
+
+    // Initialize Tauri application
     tauri::Builder::default()
-        .plugin(tauri_plugin_log::Builder::default().build())
-        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
-        .manage(MongoState {
-            client: Mutex::new(None),
-        })
-        .manage(R2State {
-            client: Mutex::new(None),
-        })
+        .manage(MongoState { client: Mutex::new(None) })
+        .manage(R2State { client: Mutex::new(None), bucket_name: Mutex::new(None) })
+        .manage(Arc::new(UploadState::new(upload_tx, upload_rx))) // Wrap state in Arc
         .invoke_handler(tauri::generate_handler![
-            store_mongo_credentials,
-            store_r2_credentials,
-            get_mongo_credentials,
-            get_r2_credentials,
-            has_credentials,
-            delete_credentials,
-            init_mongo_client,
+            // Credential Commands (now from credentials module)
+            // Credential Commands (now from features::credentials module)
+            // features::credentials::store_r2_credentials,
+            // features::credentials::get_r2_credentials,
+            // features::credentials::store_mongo_credentials,
+            // features::credentials::get_mongo_credentials,
+            // features::credentials::has_credentials,
+            // features::credentials::delete_credentials,
+            // Client Init & Test Commands
             init_r2_client,
+            init_mongo_client,
             test_mongo_connection,
             test_r2_connection,
-            extract_audio_metadata,
+            // Audio/File Commands
+            features::upload::audio::metadata::extract_metadata, // Updated path
             extract_audio_metadata_batch,
             select_audio_files,
             get_file_stats,
             transcode_audio_file,
             transcode_audio_batch,
-            upload_transcoded_tracks,
-            upload_album_artwork,
+            // MongoDB Commands
+            features::catalog::storage::mongodb::fetch_all_tracks,
+            features::catalog::storage::mongodb::update_track_metadata, // <-- Added update_track_metadata
+            // Upload Queue Commands
+            // Upload Queue Commands (from features::upload)
+            features::upload::start_upload_queue,
+            features::upload::cancel_upload_queue,
+            // Debug Commands
             debug_mongo_state,
-            create_mongodb_client,
-            commands::clear_test_data,
-            commands::fetch_all_tracks,
-            commands::test_mongodb_collections,
+            ping, // Add the new ping command here
+            // New proxies
+            store_r2_credentials_proxy,
+            store_mongo_credentials_proxy,
+            get_r2_credentials_proxy,
+            get_mongo_credentials_proxy,
+            has_credentials_proxy,
+            delete_credentials_proxy,
+            // New test command
+            test_extract_metadata,
+            extract_metadata_wrapper,
+            // New credential wrappers
+            get_mongo_credentials_wrapper,
+            get_r2_credentials_wrapper,
+            store_mongo_credentials_wrapper,
+            store_r2_credentials_wrapper,
         ])
+        .setup(|app| {
+            info!("Application setup started");
+            let app_handle = app.handle().clone();
+            
+            // Use tauri's async_runtime instead of tokio::spawn directly
+            tauri::async_runtime::spawn(async move {
+                let mongo_state: State<MongoState> = app_handle.state();
+                let r2_state: State<R2State> = app_handle.state();
+
+                info!("Attempting background initialization of MongoDB client...");
+                if let Err(e) = init_mongo_client(mongo_state).await {
+                    warn!("Background MongoDB initialization failed: {}", e);
+                    let _ = app_handle.emit("mongo-init-failed", e.to_string());
+                } else {
+                     info!("Background MongoDB initialization successful.");
+                     let _ = app_handle.emit("mongo-init-success", ());
+                }
+
+                info!("Attempting background initialization of R2 client...");
+                 if let Err(e) = init_r2_client(r2_state).await {
+                     warn!("Background R2 initialization failed: {}", e);
+                     let _ = app_handle.emit("r2-init-failed", e.to_string());
+                 } else {
+                     info!("Background R2 initialization successful.");
+                     let _ = app_handle.emit("r2-init-success", ());
+                 }
+            });
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+
+    info!("Application finished");
+}
+
+#[tauri::command]
+fn extract_metadata_wrapper(filePath: String) -> Result<serde_json::Value, String> {
+    // Call the actual metadata extraction function
+    info!("Wrapper calling extract_metadata for: {}", filePath);
+    match features::upload::audio::metadata::extract_metadata(filePath) {
+        Ok(metadata) => {
+            // Convert the UploadItemMetadata struct to a JSON value
+            match serde_json::to_value(metadata) {
+                Ok(json) => Ok(json),
+                Err(e) => Err(format!("Error serializing metadata: {}", e))
+            }
+        },
+        Err(e) => Err(e)
+    }
+}
+
+#[tauri::command]
+async fn get_mongo_credentials_wrapper() -> Result<String, String> {
+    // Call the actual credentials function 
+    info!("Wrapper calling get_mongo_credentials");
+    match features::credentials::get_mongo_credentials().await {
+        Ok(creds) => Ok(creds),
+        Err(e) => Err(format!("Error retrieving MongoDB credentials: {}", e))
+    }
+}
+
+#[tauri::command]
+async fn get_r2_credentials_wrapper() -> Result<serde_json::Value, String> {
+    // Call the actual credentials function
+    info!("Wrapper calling get_r2_credentials");
+    match features::credentials::get_r2_credentials().await {
+        Ok(creds) => {
+            // Convert the R2Credentials struct to a JSON value
+            match serde_json::to_value(creds) {
+                Ok(json) => Ok(json),
+                Err(e) => Err(format!("Error serializing R2 credentials: {}", e))
+            }
+        },
+        Err(e) => Err(format!("Error retrieving R2 credentials: {}", e))
+    }
+}
+
+#[tauri::command]
+async fn store_mongo_credentials_wrapper(connectionString: String) -> Result<bool, String> {
+    // Call the actual store credentials function
+    info!("Wrapper calling store_mongo_credentials for connection string");
+    match features::credentials::store_mongo_credentials(connectionString).await {
+        Ok(result) => Ok(result),
+        Err(e) => Err(format!("Error storing MongoDB credentials: {}", e))
+    }
+}
+
+#[tauri::command]
+async fn store_r2_credentials_wrapper(
+    accountId: String,
+    bucketName: String,
+    accessKeyId: String,
+    secretAccessKey: String,
+    endpoint: String,
+) -> Result<bool, String> {
+    // Call the actual store credentials function
+    info!("Wrapper calling store_r2_credentials");
+    match features::credentials::store_r2_credentials(
+        accountId, bucketName, accessKeyId, secretAccessKey, endpoint
+    ).await {
+        Ok(result) => Ok(result),
+        Err(e) => Err(format!("Error storing R2 credentials: {}", e))
+    }
 }

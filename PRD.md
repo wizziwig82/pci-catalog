@@ -2,8 +2,8 @@
 
 ## Version
 
-- Version: 1.0
-- Date: March 30, 2025
+- Version: 1.1
+- Date: March 30, 2025 (Updated: April 3, 2025)
 
 ## Overview
 ### Product Name
@@ -34,7 +34,7 @@ Allow the user to configure Cloudflare R2 and MongoDB credentials securely.
 #### Requirements
 
 - Credential Input: UI fields for R2 bucket name, access keys, and MongoDB connection string.
-- Storage: Securely store credentials in macOS keychain using Tauri.
+- Storage: Securely store credentials in macOS keychain using Tauri (implemented via the `keyring` crate in `main.rs`). A `dev_credentials.json` file is used as a fallback during debug builds if keychain access fails.
 - Validation: Validate credentials during setup by testing connections to R2 and MongoDB.
 - Security Option: Initially set R2 files as public, with future option for signed URLs.
 
@@ -133,6 +133,7 @@ Provide basic search to find tracks and albums.
 
 - Technology: Svelte
 - Responsibilities: UI for file selection, bulk editing, image upload, and search; communicates with backend via Tauri commands.
+- Local Storage: Utilizes Drizzle ORM with a local SQLite database (`@libsql/client`) for frontend-specific session and authentication state management, separate from the main MongoDB data store.
 
 ### Backend
 
@@ -140,7 +141,7 @@ Provide basic search to find tracks and albums.
 - Libraries:
   - audio-metadata: Metadata extraction.
   - aws-sdk-rust: R2 interactions (S3-compatible).
-  - async-mongo: MongoDB operations.
+  - `mongodb`: MongoDB operations (official Rust driver).
   - ffmpeg-rs: Audio transcoding.
 - Responsibilities: File handling, transcoding, cloud storage, database updates.
 
@@ -197,7 +198,7 @@ Ensure the database and storage are accessible by a Next.js website for streamin
 
 - Cloudflare R2: Object storage.
 - MongoDB: Database.
-- Libraries: audio-metadata, aws-sdk-rust, async-mongo, ffmpeg-rs.
+- Libraries: audio-metadata, aws-sdk-rust, `mongodb`, ffmpeg-rs, `keyring`.
 - Frameworks: Svelte, Tauri, Rust.
 
 ## Timeline and Milestones

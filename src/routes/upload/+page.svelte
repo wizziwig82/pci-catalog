@@ -1,727 +1,398 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import { invoke } from '@tauri-apps/api/core';
-  import { listen } from '@tauri-apps/api/event';
-  import FileUploader from '$lib/components/FileUploader.svelte';
-  import TagSelector from '$lib/components/TagSelector.svelte';
-  import { instrumentTags, moodTags, tagsToString } from '$lib/stores/tagData';
-  
-  // Define TypeScript interfaces
-  interface TranscodingResult {
-    success: boolean;
-    input_path: string;
-    medium_quality_path?: string;
-    error?: string;
-    output_format: string;
-    bitrate: number;
-  }
+  import { onMount } from 'svelte'; // onDestroy might be removed if no longer needed
+  import { safeInvoke } from '$lib/utils/invokeWrapper'; // Import the wrapper
+  import { showSuccessToast, showErrorToast } from '$lib/stores/notifications'; // Import success and error toasts
+  import FileUploader from '$lib/components/common/FileUploader.svelte';
+  import type { UploadItemMetadata } from '$lib/types/catalog'; // Assuming type is defined here or create it
+  import UploadMetadataEditor from '$features/upload/components/UploadMetadataEditor.svelte'; // Import the new component
 
-  interface Track {
-    title: string;
-    album_id: string;
-    genre: string[];
-    duration: number;
-    original_path: string;
-    writers: string[];
-    writer_percentages: number[];
-    publishers: string[];
-    publisher_percentages: number[];
-    instruments: string[];
-    mood: string[];
-    comments: string;
-    // Add other track fields as needed
+  // Define TypeScript interfaces (UploadItemMetadata will be primary)
+  // Using UploadItemMetadata from types/catalog.ts
+  // Example inline definition (prefer importing if it exists):
+  /*
+  interface UploadItemMetadata {
+      title?: string;
+      artist?: string;
+      album?: string;
+      track_number?: number;
+      duration_sec?: number;
+      genre?: string;
+      composer?: string;
+      year?: number;
+      comments?: string;
+      // Add a field to store the original file path, crucial for linking back
+      original_path: string;
   }
-
-  interface Album {
-    name: string;
-    artist: string;
-    // Add other album fields as needed
-  }
-
-  interface ExtractedMetadata {
-    track: Track;
-    album: Album;
-    fileInfo: {
-      path: string;
-      size: number;
-      // Add other file info fields as needed
-    };
-  }
+  */
   
   // Store for selected files
-  let selectedFiles: File[] = [];
-  // Store for extracted metadata
-  let extractedMetadata: ExtractedMetadata[] = [];
-  // Store for file paths
+  let selectedFiles: File[] = []; // Keep track of original File objects if needed
+  // Store for extracted metadata using the new structure
+  let uploadItemsMetadata: UploadItemMetadata[] = [];
+  // Store for file paths (still useful)
   let selectedFilePaths: string[] = [];
   // Loading state
   let isLoading = false;
   let error: string | null = null;
-  // Transcoding state
-  let isTranscoding = false;
-  let transcodingProgress = 0;
-  let transcodedFiles: any[] = [];
-  // Upload state
-  let isUploading = false;
-  let uploadProgress = 0;
-  let uploadedFiles: any[] = [];
-  let failedUploads: any[] = [];
+  let isUploading = false; // Simple flag for upload queue call
   
-  // Transcoding options
-  let mediumBitrate = 128;
-  let outputFormat = 'mp3';
-  let outputDir = 'transcoded';
   
   // Add mongoStatus variable at the top of the script section
   let mongoStatus = '';
 
-  // Metadata editing state
-  let isEditingMetadata = false;
-  let selectedTrackIndex = -1;
-  let bulkEditMode = false;
-  let selectedTrackIndices: number[] = [];
-  
-  // Fields for bulk editing
-  let bulkEditFields = {
-    album: "",
-    artist: "",
-    genre: "",
-    writers: [] as string[],
-    writer_percentages: [] as number[],
-    publishers: [] as string[],
-    publisher_percentages: [] as number[],
-    instruments: "",
-    mood: ""
-  };
+  // Metadata editing state (now managed within UploadMetadataEditor)
+  let showMetadataEditor = false; // Simple flag to show/hide the editor component
 
-  // Writer and publisher percentages validation
-  let writerPercentagesValid = true;
-  let publisherPercentagesValid = true;
-  let bulkWriterPercentagesValid = true;
-  let bulkPublisherPercentagesValid = true;
+
+  onMount(async () => {
+    try {
+      console.log('Attempting to invoke ping command...');
+      const result = await safeInvoke('ping'); // Using safeInvoke as imported
+      console.log('Ping command successful, result:', result); // Should log "pong"
+    } catch (error) {
+      // safeInvoke typically handles errors and shows toasts, but we log here too.
+      console.error('Error invoking ping command (onMount catch):', error);
+    }
+  });
   
-  // Add selected track state variables for instruments and moods
-  let selectedTrackInstruments: string[] = [];
-  let selectedTrackMood: string[] = [];
   
-  // Handle tag selector changes
-  function handleInstrumentTagsChanged(event: CustomEvent<{ tags: string[] }>) {
-    if (selectedTrackIndex >= 0) {
-      selectedTrackInstruments = event.detail.tags;
-      extractedMetadata[selectedTrackIndex].track.instruments = event.detail.tags;
+  // Handle file selection from FileUploader component
+  async function handleFileSelection(event: CustomEvent<{ files: File[], paths: string[] }>) {
+    selectedFiles = event.detail.files;
+    selectedFilePaths = event.detail.paths;
+    console.log('Files selected:', selectedFilePaths);
+    // Reset states when new files are selected
+    uploadItemsMetadata = []; // Reset new metadata store
+    showMetadataEditor = false; // Hide editor on new selection
+    error = null;
+    isUploading = false; // Reset upload state
+    // Automatically extract metadata after selection
+    if (selectedFilePaths.length > 0) {
+      await extractMetadataForAllFiles(); // Call the updated function
     }
   }
-  
-  function handleMoodTagsChanged(event: CustomEvent<{ tags: string[] }>) {
-    if (selectedTrackIndex >= 0) {
-      selectedTrackMood = event.detail.tags;
-      extractedMetadata[selectedTrackIndex].track.mood = event.detail.tags;
-    }
-  }
-  
-  // Handle bulk edit tag changes
-  function handleBulkInstrumentTagsChanged(event: CustomEvent<{ tags: string[] }>) {
-    bulkEditFields.instruments = tagsToString(event.detail.tags);
-  }
-  
-  function handleBulkMoodTagsChanged(event: CustomEvent<{ tags: string[] }>) {
-    bulkEditFields.mood = tagsToString(event.detail.tags);
-  }
-  
-  // Extract metadata from selected files
-  async function extractMetadata() {
+
+
+  // Extract metadata for all selected files using the new backend command
+  async function extractMetadataForAllFiles() {
     if (selectedFilePaths.length === 0) {
-      isLoading = false;
-      return;
+      return; // Nothing to process
     }
-    
     isLoading = true;
     error = null;
-    
-    try {
-      // Call the Tauri command to extract metadata from the selected file paths
-      console.log('Extracting metadata from paths:', selectedFilePaths);
-      const metadata = await invoke<any[]>('extract_audio_metadata_batch', {
-        filePaths: selectedFilePaths
+    const results: UploadItemMetadata[] = [];
+    let hasErrors = false;
+
+    console.log(`Starting metadata extraction for ${selectedFilePaths.length} files...`);
+
+    for (const filePath of selectedFilePaths) {
+      console.log(`Extracting metadata for: ${filePath}`);
+      // Switch to the wrapper command
+      const result = await safeInvoke<UploadItemMetadata>('extract_metadata_wrapper', {
+         filePath: filePath // Match the parameter name expected by Rust
       });
-      
-      extractedMetadata = metadata;
-      console.log('Extracted metadata:', extractedMetadata);
-    } catch (err) {
-      console.error('Failed to extract metadata:', err);
-      error = err instanceof Error ? err.message : String(err);
-    } finally {
-      isLoading = false;
-    }
-  }
-  
-  // Function to transcode files in a batch
-  async function transcodeFiles() {
-    if (selectedFilePaths.length === 0) {
-      error = 'No files selected';
-      return;
-    }
-    
-    isTranscoding = true;
-    transcodingProgress = 0;
-    error = null;
-    transcodedFiles = []; // Clear previous transcoded files
-    
-    try {
-      console.log('Starting batch transcoding of', selectedFilePaths.length, 'files');
-      
-      // Call the batch transcoding function
-      const results = await invoke<TranscodingResult[]>('transcode_audio_batch', {
-        filePaths: selectedFilePaths,
-        mediumBitrate, 
-        outputFormat,
-        outputDir 
-      });
-      
-      console.log('Transcoding results:', results);
-      
-      // Store the transcoding results
-      transcodedFiles = results || [];
-      
-      // Filter successful transcodes
-      const successfulTranscodes = transcodedFiles.filter(file => file.success);
-      console.log(`Successfully transcoded ${successfulTranscodes.length} of ${selectedFilePaths.length} files`);
-      
-      if (successfulTranscodes.length === 0) {
-        error = 'No files were successfully transcoded';
-      }
-    } catch (err) {
-      console.error('Failed to transcode files:', err);
-      error = err instanceof Error ? err.message : String(err);
-    } finally {
-      isTranscoding = false;
-      transcodingProgress = 100;
-      console.log('Transcoding completed, isTranscoding set to:', isTranscoding);
-      console.log('Number of transcoded files:', transcodedFiles?.length || 0);
-    }
-  }
-  
-  // Function to upload files to R2 and store metadata in MongoDB
-  async function uploadFiles() {
-    console.log('uploadFiles() called - Starting upload process');
-    console.log('Current state - isLoading:', isLoading, 'isTranscoding:', isTranscoding, 'isUploading:', isUploading, 'transcodedFiles.length:', transcodedFiles.length);
-    
-    if (transcodedFiles.length === 0 || extractedMetadata.length === 0) {
-      alert('Please transcode files before uploading.');
-      console.log('Upload aborted - No transcoded files or metadata');
-      return;
-    }
-    
-    // Check if any transcoding was successful
-    const successfulTranscodes = transcodedFiles.filter(file => file.success);
-    console.log('Successful transcodes:', successfulTranscodes.length, 'of', transcodedFiles.length);
-    
-    if (successfulTranscodes.length === 0) {
-      alert('No files were successfully transcoded. Cannot proceed with upload.');
-      console.log('Upload aborted - No successful transcodes');
-      return;
-    }
-    
-    isUploading = true;
-    uploadProgress = 0;
-    uploadedFiles = [];
-    failedUploads = [];
-    error = null;
-    
-    try {
-      console.log('Uploading transcoded files to R2 and storing metadata in MongoDB');
-      
-      // Initialize R2 client first
-      console.log('Attempting to initialize R2 client...');
-      const r2Initialized = await invoke<boolean>('init_r2_client');
-      console.log('R2 client initialization result:', r2Initialized);
-      if (!r2Initialized) {
-        throw new Error('Failed to initialize R2 client. Please check your credentials in Settings.');
-      }
-      
-      // Initialize MongoDB client
-      console.log('Attempting to initialize MongoDB client...');
-      const mongoInitialized = await invoke<boolean>('init_mongo_client');
-      console.log('MongoDB client initialization result:', mongoInitialized);
-      if (!mongoInitialized) {
-        throw new Error('Failed to initialize MongoDB client. Please check your credentials in Settings.');
-      }
-      
-      // Filter out metadata for files that were successfully transcoded
-      const successfulFilePaths = successfulTranscodes.map(file => file.input_path);
-      console.log('Successful file paths:', successfulFilePaths);
-      console.log('Metadata:', extractedMetadata);
-      
-      const filteredMetadata = extractedMetadata.filter(metadata => {
-        const metadataPath = metadata.track.original_path || metadata.fileInfo.path;
-        return successfulFilePaths.some(path => path === metadataPath);
-      });
-      
-      console.log('Filtered metadata:', filteredMetadata);
-      console.log('Transcoding results to upload:', successfulTranscodes);
-      
-      if (filteredMetadata.length !== successfulTranscodes.length) {
-        console.warn(`Mismatch between metadata (${filteredMetadata.length}) and transcoded files (${successfulTranscodes.length})`);
-      }
-      
-      // Process metadata into the format expected by the backend
-      const processedMetadata = filteredMetadata.map(metadata => {
-        const processed = JSON.parse(JSON.stringify(metadata));
-        
-        // Ensure all required fields exist with valid data
-        if (!processed.track.writers) {
-          processed.track.writers = {};
-        } else if (Array.isArray(processed.track.writers)) {
-          // Convert array to object with equal shares
-          const writerObj: Record<string, number> = {};
-          processed.track.writers.forEach((writer: string) => {
-            writerObj[writer] = Math.floor(100 / processed.track.writers.length);
-          });
-          processed.track.writers = writerObj;
-        }
-        
-        if (!processed.track.publishers) {
-          processed.track.publishers = {};
-        } else if (Array.isArray(processed.track.publishers)) {
-          // Convert array to object with equal shares
-          const publisherObj: Record<string, number> = {};
-          processed.track.publishers.forEach((publisher: string) => {
-            publisherObj[publisher] = Math.floor(100 / processed.track.publishers.length);
-          });
-          processed.track.publishers = publisherObj;
-        }
-        
-        // Ensure genre is always an array
-        if (processed.track.genre && !Array.isArray(processed.track.genre)) {
-          processed.track.genre = [processed.track.genre];
-        } else if (!processed.track.genre || processed.track.genre.length === 0) {
-          processed.track.genre = ["Unclassified"];
-        }
-        
-        // Make sure instruments is available at the top level since MongoDB expects it
-        if (!processed.track.instruments) {
-          processed.track.instruments = [];
-        }
-        
-        // Make sure mood is available at the top level
-        if (!processed.track.mood) {
-          processed.track.mood = [];
-        }
-        
-        // Add comments to custom_metadata if it exists
-        if (processed.track.comments) {
-          processed.track.custom_metadata = processed.track.custom_metadata || {};
-          processed.track.custom_metadata.comments = processed.track.comments;
-          delete processed.track.comments;
-        }
-        
-        return processed;
-      });
-      
-      // Upload files one by one with delay
-      console.log('Starting sequential upload process...');
-      
-      const uploadedTracks: any[] = [];
-      const failedTracks: any[] = [];
-      let currentIndex = 0;
-      
-      const uploadNextTrack = async () => {
-        if (currentIndex >= successfulTranscodes.length) {
-          // All tracks processed, show results
-          console.log('All tracks processed. Successes:', uploadedTracks.length, 'Failures:', failedTracks.length);
-          handleUploadResults({
-            success: failedTracks.length === 0,
-            message: failedTracks.length === 0 
-              ? `Successfully uploaded ${uploadedTracks.length} tracks` 
-              : `Uploaded ${uploadedTracks.length} tracks with ${failedTracks.length} failures`,
-            uploaded_tracks: uploadedTracks,
-            failed_tracks: failedTracks
-          });
-          return;
-        }
-        
-        // Update progress
-        uploadProgress = Math.floor((currentIndex / successfulTranscodes.length) * 100);
-        
-        // Get current track and metadata
-        const currentTranscode = successfulTranscodes[currentIndex];
-        const currentMetadata = processedMetadata[currentIndex];
-        
-        try {
-          console.log(`Uploading track ${currentIndex + 1}/${successfulTranscodes.length}: ${currentTranscode.input_path}`);
-          
-          // Create a single-item array for this track's metadata
-          const singleItemArray = [currentMetadata];
-          
-          // Try to upload this single track
-          const result = await invoke<{
-            success: boolean;
-            message: string;
-            uploaded_tracks: any[];
-            failed_tracks: any[];
-          }>('upload_transcoded_tracks', {
-            transcodingResults: [currentTranscode],
-            audioMetadataList: singleItemArray,
-            pathConfig: {
-              original_prefix: 'tracks/original',
-              medium_prefix: 'tracks/medium',
-              album_art_prefix: 'albums/artwork'
-            }
-          });
-          
-          console.log(`Upload result for track ${currentIndex + 1}:`, result);
-          
-          // Add results to our tracking arrays
-          if (result.uploaded_tracks && result.uploaded_tracks.length > 0) {
-            uploadedTracks.push(...result.uploaded_tracks);
-          }
-          
-          if (result.failed_tracks && result.failed_tracks.length > 0) {
-            failedTracks.push(...result.failed_tracks);
-          }
-        } catch (err) {
-          console.error(`Failed to upload track ${currentIndex + 1}:`, err);
-          
-          // Add to failed tracks
-          failedTracks.push({
-            original_path: currentTranscode.input_path,
-            error: err instanceof Error ? err.message : String(err)
-          });
-        }
-        
-        // Move to next track after a small delay to avoid overwhelming MongoDB
-        currentIndex++;
-        setTimeout(uploadNextTrack, 500); // 500ms delay between uploads
-      };
-      
-      // Start the sequential upload process
-      uploadNextTrack();
-    } catch (err) {
-      console.error('Failed to upload files:', err);
-      error = err instanceof Error ? err.message : String(err);
-      isUploading = false;
-      uploadProgress = 100;
-    }
-  }
-  
-  // Helper function to handle upload results
-  function handleUploadResults(uploadResult: { 
-    success: boolean; 
-    message: string; 
-    uploaded_tracks: any[]; 
-    failed_tracks: any[];
-  }) {
-    console.log('Upload complete, final results:', uploadResult);
-    
-    if (uploadResult.uploaded_tracks) {
-      uploadedFiles = uploadResult.uploaded_tracks;
-    }
-    
-    if (uploadResult.failed_tracks) {
-      failedUploads = uploadResult.failed_tracks;
-    }
-    
-    if (uploadResult.message) {
-      if (!uploadResult.success) {
-        error = uploadResult.message;
+
+      if (result !== null) {
+        // Add the original path to the metadata object for reference
+        results.push({ ...result, original_path: filePath });
+        console.log(`Successfully extracted metadata for: ${filePath}`, result);
       } else {
-        alert(uploadResult.message);
+        // safeInvoke already showed an error toast
+        console.error(`Failed to extract metadata for: ${filePath}`);
+        // Optionally add a placeholder or skip the file
+        // For now, we just note that there was an error
+        hasErrors = true;
       }
     }
-    
-    // Mark upload as complete
-    isUploading = false;
-    uploadProgress = 100;
-  }
 
-  // Function to enable metadata editing mode after transcoding
-  function editMetadata() {
-    isEditingMetadata = true;
-  }
+    uploadItemsMetadata = results; // Update the state with all results (successes and potentially placeholders for failures)
+    console.log('Finished metadata extraction. Results:', uploadItemsMetadata);
 
-  // Function to edit a specific track
-  function editTrack(index: number) {
-    selectedTrackIndex = index;
-    bulkEditMode = false;
-  }
-
-  // Function to toggle track selection for bulk editing
-  function toggleTrackSelection(index: number) {
-    const idx = selectedTrackIndices.indexOf(index);
-    if (idx === -1) {
-      selectedTrackIndices = [...selectedTrackIndices, index];
+    if (hasErrors) {
+       // Maybe show a general error if some failed, though individual errors were toasted
+       error = "Metadata extraction failed for one or more files."; // Set component error state
     } else {
-      selectedTrackIndices = selectedTrackIndices.filter(i => i !== index);
-    }
-  }
-
-  // Function to select/deselect all tracks
-  function selectAllTracks(select: boolean) {
-    if (select) {
-      // Select all tracks
-      selectedTrackIndices = [...Array(extractedMetadata.length).keys()];
-    } else {
-      // Deselect all tracks
-      selectedTrackIndices = [];
-    }
-  }
-
-  // Function to enable bulk edit mode
-  function startBulkEdit() {
-    bulkEditMode = true;
-    selectedTrackIndex = -1;
-    
-    // Only populate fields if tracks are selected
-    if (selectedTrackIndices.length > 0) {
-      // Initialize with values from the first selected track
-      const firstTrack = extractedMetadata[selectedTrackIndices[0]];
-      
-      // For simple fields, only use value if all selected tracks have the same value
-      let albumName = firstTrack.album.name;
-      let artistName = firstTrack.album.artist;
-      let genreValue = firstTrack.track.genre.join(', ');
-      let instrumentsValue = firstTrack.track.instruments?.join(', ') || '';
-      let moodValue = firstTrack.track.mood?.join(', ') || '';
-      
-      // Check if all selected tracks have the same values
-      for (let i = 1; i < selectedTrackIndices.length; i++) {
-        const track = extractedMetadata[selectedTrackIndices[i]];
-        
-        if (track.album.name !== albumName) albumName = '';
-        if (track.album.artist !== artistName) artistName = '';
-        if (track.track.genre.join(', ') !== genreValue) genreValue = '';
-        if ((track.track.instruments?.join(', ') || '') !== instrumentsValue) instrumentsValue = '';
-        if ((track.track.mood?.join(', ') || '') !== moodValue) moodValue = '';
-      }
-      
-      // Collect all unique writers and publishers across all selected tracks
-      const writersSet = new Set<string>();
-      const publishersSet = new Set<string>();
-      
-      selectedTrackIndices.forEach(index => {
-        const track = extractedMetadata[index].track;
-        
-        // Add all writers from this track
-        if (track.writers && track.writers.length > 0) {
-          track.writers.forEach(writer => writersSet.add(writer));
-        }
-        
-        // Add all publishers from this track
-        if (track.publishers && track.publishers.length > 0) {
-          track.publishers.forEach(publisher => publishersSet.add(publisher));
-        }
-      });
-      
-      // Convert sets to arrays
-      const writers = Array.from(writersSet);
-      const publishers = Array.from(publishersSet);
-      
-      // Calculate equal percentages
-      const writerPercentage = writers.length > 0 ? Math.floor(100 / writers.length) : 0;
-      const publisherPercentage = publishers.length > 0 ? Math.floor(100 / publishers.length) : 0;
-      
-      // Set bulk edit fields with the collected values
-      bulkEditFields = {
-        album: albumName,
-        artist: artistName,
-        genre: genreValue,
-        writers: writers,
-        writer_percentages: writers.map(() => writerPercentage),
-        publishers: publishers,
-        publisher_percentages: publishers.map(() => publisherPercentage),
-        instruments: instrumentsValue,
-        mood: moodValue
-      };
-      
-      // Validate the percentages
-      validatePercentages();
-    }
-  }
-
-  // Function to apply bulk edits to selected tracks
-  function applyBulkEdits() {
-    if (selectedTrackIndices.length === 0) {
-      alert('Please select at least one track to edit');
-      return;
+       showSuccessToast(`Successfully extracted metadata for ${results.length} files.`);
     }
 
-    validatePercentages();
-    
-    // Check if percentages are valid
-    if (bulkEditFields.writers.length > 0 && !bulkWriterPercentagesValid) {
-      alert('Writer percentages must sum to 100%');
-      return;
-    }
-    
-    if (bulkEditFields.publishers.length > 0 && !bulkPublisherPercentagesValid) {
-      alert('Publisher percentages must sum to 100%');
-      return;
-    }
-
-    for (const index of selectedTrackIndices) {
-      if (bulkEditFields.album) {
-        extractedMetadata[index].album.name = bulkEditFields.album;
-      }
-      if (bulkEditFields.artist) {
-        extractedMetadata[index].album.artist = bulkEditFields.artist;
-      }
-      if (bulkEditFields.genre) {
-        extractedMetadata[index].track.genre = bulkEditFields.genre.split(',').map(g => g.trim());
-      }
-      if (bulkEditFields.writers.length > 0) {
-        extractedMetadata[index].track.writers = [...bulkEditFields.writers];
-        extractedMetadata[index].track.writer_percentages = [...bulkEditFields.writer_percentages];
-      }
-      if (bulkEditFields.publishers.length > 0) {
-        extractedMetadata[index].track.publishers = [...bulkEditFields.publishers];
-        extractedMetadata[index].track.publisher_percentages = [...bulkEditFields.publisher_percentages];
-      }
-      if (bulkEditFields.instruments) {
-        extractedMetadata[index].track.instruments = bulkEditFields.instruments.split(',').map(i => i.trim());
-      }
-      if (bulkEditFields.mood) {
-        extractedMetadata[index].track.mood = bulkEditFields.mood.split(',').map(m => m.trim());
-      }
-    }
-
-    // Reset bulk edit fields
-    bulkEditFields = {
-      album: "",
-      artist: "",
-      genre: "",
-      writers: [] as string[],
-      writer_percentages: [] as number[],
-      publishers: [] as string[],
-      publisher_percentages: [] as number[],
-      instruments: "",
-      mood: ""
-    };
-    
-    bulkEditMode = false;
-    selectedTrackIndices = [];
-  }
-
-  // Function to validate percentages
-  function validatePercentages() {
-    if (selectedTrackIndex >= 0) {
-      const track = extractedMetadata[selectedTrackIndex].track;
-      
-      if (track.writer_percentages && track.writer_percentages.length > 0) {
-        const writerSum = track.writer_percentages.reduce((sum, percent) => sum + percent, 0);
-        writerPercentagesValid = Math.abs(writerSum - 100) < 0.01;
-      }
-      
-      if (track.publisher_percentages && track.publisher_percentages.length > 0) {
-        const publisherSum = track.publisher_percentages.reduce((sum, percent) => sum + percent, 0);
-        publisherPercentagesValid = Math.abs(publisherSum - 100) < 0.01;
-      }
-    }
-    
-    // Validate bulk edit percentages
-    if (bulkEditFields.writer_percentages && bulkEditFields.writer_percentages.length > 0) {
-      const writerSum = bulkEditFields.writer_percentages.reduce((sum, percent) => sum + percent, 0);
-      bulkWriterPercentagesValid = Math.abs(writerSum - 100) < 0.01;
-    } else {
-      bulkWriterPercentagesValid = true;
-    }
-    
-    if (bulkEditFields.publisher_percentages && bulkEditFields.publisher_percentages.length > 0) {
-      const publisherSum = bulkEditFields.publisher_percentages.reduce((sum, percent) => sum + percent, 0);
-      bulkPublisherPercentagesValid = Math.abs(publisherSum - 100) < 0.01;
-    } else {
-      bulkPublisherPercentagesValid = true;
-    }
-  }
-
-  // Function to save individual track edits
-  function saveTrackEdits() {
-    validatePercentages();
-    if (!writerPercentagesValid) {
-      alert('Writer percentages must sum to 100%');
-      return;
-    }
-    if (!publisherPercentagesValid) {
-      alert('Publisher percentages must sum to 100%');
-      return;
-    }
-    
-    selectedTrackIndex = -1;
-  }
-
-  // Function to cancel editing and go back
-  function cancelEditing() {
-    isEditingMetadata = false;
-    selectedTrackIndex = -1;
-    bulkEditMode = false;
-    selectedTrackIndices = [];
-  }
-
-  // Function to finalize metadata and proceed to upload
-  function finalizeMetadata() {
-    isEditingMetadata = false;
+    isLoading = false;
   }
   
-  // Function to start the upload process
-  function startUpload() {
-    if (selectedFilePaths.length === 0) {
-      alert('Please select at least one file to upload.');
-      return;
-    }
-    
-    // This will be expanded in future tasks to handle the actual upload
-    console.log('Starting upload of', selectedFilePaths.length, 'files');
-    // Future: call to Tauri backend for metadata extraction and upload
+
+  // --- Event Handlers for UploadMetadataEditor ---
+
+  function handleMetadataUpdated(event: CustomEvent<{ updatedMetadata: UploadItemMetadata[] }>) {
+    console.log('Metadata updated from editor component:', event.detail.updatedMetadata);
+    uploadItemsMetadata = event.detail.updatedMetadata;
+    // Optionally add a success toast or indication
   }
 
-  // Open file dialog directly
-  async function openFileDialog() {
-    try {
-      isLoading = true;
-      error = null;
-      extractedMetadata = [];
-      transcodedFiles = [];
-      uploadedFiles = [];
-      failedUploads = [];
-      
-      // Open the file dialog to select music files
-      selectedFilePaths = await invoke<string[]>('select_audio_files');
-      console.log('Selected file paths:', selectedFilePaths);
-      
-      if (selectedFilePaths.length > 0) {
-        // Update the UI to show selected files
-        selectedFiles = selectedFilePaths.map(path => {
-          const filename = path.split('/').pop() || path;
-          // Create a mock File object since we don't have the actual File object
-          return {
-            name: filename,
-            size: 0,
-            type: 'audio/unknown'
-          } as File;
-        });
-        
-        // Try to get file sizes
-        try {
-          const promises = selectedFilePaths.map(async (path, index) => {
-            const stats = await invoke<{size: number}>('get_file_stats', { path });
-            if (stats && selectedFiles[index]) {
-              selectedFiles[index] = {...selectedFiles[index], size: stats.size};
-            }
-          });
-          await Promise.allSettled(promises);
-        } catch (err) {
-          console.error('Error getting file stats:', err);
-        }
-        
-        // Extract metadata
-        await extractMetadata();
-      }
-    } catch (err) {
-      console.error('Failed to select files:', err);
-      error = err instanceof Error ? err.message : String(err);
-    } finally {
-      isLoading = false;
-    }
+  function handleEditorCancel() {
+    console.log('Metadata editing cancelled.');
+    showMetadataEditor = false;
   }
+
+  function handleEditorFinalize() {
+    console.log('Metadata editing finalized.');
+    showMetadataEditor = false;
+    // Proceed to upload or next step if needed, but upload is now separate button
+  }
+
+  // Function to show the editor
+  function openMetadataEditor() {
+    showMetadataEditor = true;
+  }
+
+  // --- End Event Handlers ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    // Function to start the upload queue using the new backend command
+    async function startUploadQueue() {
+      if (uploadItemsMetadata.length === 0) {
+        showErrorToast('No files with metadata ready for upload.');
+        console.log('Upload queue start aborted - No metadata.');
+        return;
+      }
+
+      isUploading = true; // Set loading state
+      error = null; // Clear previous errors
+      // Reset previous upload results if needed
+
+      console.log(`Starting upload queue for ${uploadItemsMetadata.length} items.`);
+
+      // Call the backend command to start the queue
+      const result = await safeInvoke<boolean>('start_upload_queue', {
+        items: uploadItemsMetadata // Pass the array of metadata objects
+      });
+
+      if (result === true) {
+        showSuccessToast(`Upload queue started for ${uploadItemsMetadata.length} items. Monitor progress via events.`);
+        console.log('Upload queue started successfully.');
+        // Listen for upload progress/completion events from Tauri backend
+        // For now, just clear the list after starting
+        uploadItemsMetadata = [];
+        selectedFilePaths = [];
+        selectedFiles = [];
+      } else {
+        // safeInvoke already showed an error toast
+        console.error('Failed to start the upload queue.');
+        // Keep items in the list for retry? Or clear? Decide based on desired UX.
+      }
+
+      isUploading = false; // Reset loading state
+    }
+
+    // Open file dialog directly
+    async function openFileDialog() {
+      try {
+        isLoading = true;
+        error = null;
+        uploadItemsMetadata = []; // Reset new metadata store
+        
+        // Open the file dialog to select music files
+        selectedFilePaths = (await safeInvoke<string[]>('select_audio_files')) ?? [];
+        console.log('Selected file paths:', selectedFilePaths);
+        
+        if (selectedFilePaths.length > 0) {
+          // Update the UI to show selected files
+          selectedFiles = selectedFilePaths.map(path => {
+            const filename = path.split('/').pop() || path;
+            // Create a mock File object since we don't have the actual File object
+            return {
+              name: filename,
+              size: 0,
+              type: 'audio/unknown'
+            } as File;
+          });
+          
+          // Try to get file sizes
+          try {
+            const promises = selectedFilePaths.map(async (path, index) => {
+              const stats = await safeInvoke<{size: number}>('get_file_stats', { path });
+              if (stats && selectedFiles[index]) {
+                selectedFiles[index] = {...selectedFiles[index], size: stats.size};
+              }
+            });
+            await Promise.allSettled(promises);
+          } catch (err) {
+            console.error('Error getting file stats:', err);
+          }
+          
+          // Extract metadata
+          await extractMetadataForAllFiles(); // Call updated function
+        }
+      } catch (err) {
+        console.error('Failed to select files:', err);
+        error = err instanceof Error ? err.message : String(err);
+      } finally {
+        isLoading = false;
+      }
+    }
 </script>
 
 <div class="upload-page">
@@ -743,69 +414,48 @@
         <button 
           class="debug-button" 
           on:click={async () => {
-            try {
-              console.log('Getting MongoDB client state...');
-              mongoStatus = 'Checking...';
-              const stateInfo = await invoke<string>('debug_mongo_state');
-              console.log('MongoDB state:', stateInfo);
-              mongoStatus = stateInfo;
-              
-              // Try initializing the client
-              console.log('Testing MongoDB client initialization...');
-              const mongoInitialized = await invoke<boolean>('init_mongo_client');
-              console.log('MongoDB client initialization result:', mongoInitialized);
-              
-              if (mongoInitialized) {
-                // Now test the connection
-                try {
-                  console.log('Testing MongoDB connection...');
-                  const connectionResult = await invoke<boolean>('test_mongo_connection');
-                  console.log('MongoDB connection test result:', connectionResult);
-                  
-                  if (connectionResult) {
-                    alert('MongoDB connection successful! Client is properly initialized and connected.');
-                    mongoStatus = 'Connection successful! Client is properly initialized and connected.';
-                  } else {
-                    alert('MongoDB client initialized but connection test failed.');
-                    mongoStatus = 'Client initialized but connection test failed.';
-                  }
-                } catch (connError) {
-                  console.error('MongoDB connection test error:', connError);
-                  alert(`MongoDB client initialized but connection test failed: ${connError}`);
-                  mongoStatus = `Connection test failed: ${connError}`;
+            // Refactored debug logic using safeInvoke
+            mongoStatus = 'Checking...';
+            const stateInfo = await safeInvoke<string>('debug_mongo_state');
+            mongoStatus = stateInfo ?? "Error checking state.";
+            console.log('MongoDB state:', mongoStatus);
+
+            if (mongoStatus.includes("NOT initialized")) {
+              mongoStatus = "Attempting initialization...";
+              const initSuccess = await safeInvoke<boolean>('init_mongo_client');
+              if (initSuccess) {
+                mongoStatus = "Initialization successful. Testing connection...";
+                const testSuccess = await safeInvoke<boolean>('test_mongo_connection');
+                if (testSuccess) {
+                  mongoStatus = "Connection test successful!";
+                  alert("MongoDB Connection Test Successful!");
+                } else {
+                  mongoStatus = "Initialization succeeded, but connection test failed (check toast/console).";
+                  alert("MongoDB Connection Test Failed after initialization.");
                 }
               } else {
-                // If initialization failed, try to get credentials and create client directly
-                try {
-                  console.log('Attempting to create MongoDB client directly...');
-                  // Create a direct connection with the string we have in the dev file
-                  const mongoConn = await invoke<string>('get_mongo_credentials');
-                  console.log('Got MongoDB connection string (masked):', 
-                    mongoConn.length > 20 ? 
-                      `${mongoConn.substring(0, 10)}...${mongoConn.substring(mongoConn.length - 10)}` : 
-                      '(too short to mask)');
-                  
-                  // Try to create the client directly
-                  const directClientResult = await invoke<boolean>('create_mongodb_client', { connectionString: mongoConn });
-                  console.log('Direct client creation result:', directClientResult);
-                  
-                  if (directClientResult) {
-                    alert('Successfully created MongoDB client directly! The issue was with the client initialization process, not the credentials.');
-                    mongoStatus = 'Client created directly with valid credentials.';
-                  } else {
-                    alert('Failed to create MongoDB client directly. There may be an issue with the connection string format.');
-                    mongoStatus = 'Failed to create client directly.';
-                  }
-                } catch (directErr) {
-                  console.error('Error creating MongoDB client directly:', directErr);
-                  alert(`Failed to create MongoDB client directly: ${directErr}`);
-                  mongoStatus = `Failed to create client directly: ${directErr}`;
+                mongoStatus = "Initialization failed (check toast/console). Trying direct credential check...";
+                // If init failed, check if credentials exist at least
+                const credsExist = await safeInvoke<string>('get_mongo_credentials_wrapper');
+                if (credsExist !== null) {
+                   mongoStatus += " Credentials seem to exist but client init failed.";
+                   alert("Client initialization failed, but credentials seem to exist. Check connection string format or network.");
+                } else {
+                   mongoStatus += " Could not retrieve credentials either.";
+                   alert("Client initialization failed, and could not retrieve credentials.");
                 }
               }
-            } catch (err) {
-              console.error('Error during MongoDB debugging:', err);
-              alert(`Error during MongoDB debugging: ${err}`);
-              mongoStatus = `Error: ${err}`;
+            } else if (mongoStatus.includes("initialized")) {
+               // Already initialized, just test connection
+               mongoStatus = "Client already initialized. Testing connection...";
+               const testSuccess = await safeInvoke<boolean>('test_mongo_connection');
+               if (testSuccess) {
+                 mongoStatus = "Connection test successful!";
+                 alert("MongoDB Connection Test Successful!");
+               } else {
+                 mongoStatus = "Connection test failed (check toast/console).";
+                 alert("MongoDB Connection Test Failed.");
+               }
             }
           }}
         >
@@ -820,8 +470,8 @@
     {#if isLoading}
       <div class="loading">
         <p>
-          {#if extractedMetadata.length === 0}
-            Loading...
+          {#if uploadItemsMetadata.length === 0}
+            Loading files...
           {:else}
             Extracting metadata from {selectedFilePaths.length} {selectedFilePaths.length === 1 ? 'file' : 'files'}...
           {/if}
@@ -835,606 +485,233 @@
       </div>
     {/if}
     
-    {#if extractedMetadata.length > 0}
+    {#if uploadItemsMetadata.length > 0 && !showMetadataEditor}
       <div class="metadata-preview">
-        <h3>Metadata Preview</h3>
+        <h3>Files Ready for Upload ({uploadItemsMetadata.length})</h3>
         <div class="metadata-list">
-          {#each extractedMetadata as item, i}
+          {#each uploadItemsMetadata as item, i (item.original_path)}
             <div class="metadata-item">
-              <h4>{item.track.title}</h4>
+              <!-- Display basic info from UploadItemMetadata -->
+              <h4>{item.title ?? item.original_path.split('/').pop() ?? 'Unknown Title'}</h4>
               <div class="metadata-details">
-                <div class="detail"><strong>Album:</strong> {item.album.name}</div>
-                <div class="detail"><strong>Artist:</strong> {item.album.artist}</div>
-                {#if item.track.duration}
-                  <div class="detail"><strong>Duration:</strong> {Math.floor(item.track.duration / 60)}:{Math.floor(item.track.duration % 60).toString().padStart(2, '0')}</div>
+                {#if item.album}<div class="detail"><strong>Album:</strong> {item.album}</div>{/if}
+                {#if item.artist}<div class="detail"><strong>Artist:</strong> {item.artist}</div>{/if}
+                {#if item.duration_sec}
+                  <div class="detail"><strong>Duration:</strong> {Math.floor(item.duration_sec / 60)}:{Math.floor(item.duration_sec % 60).toString().padStart(2, '0')}</div>
                 {/if}
-                {#if item.track.genre && item.track.genre.length > 0}
-                  <div class="detail"><strong>Genre:</strong> {item.track.genre.join(', ')}</div>
+                {#if item.genre}
+                  <div class="detail"><strong>Genre:</strong> {item.genre}</div>
                 {/if}
+                 <div class="detail"><strong>Path:</strong> {item.original_path}</div>
               </div>
             </div>
           {/each}
         </div>
-      </div>
-      
-      <div class="transcoding-options">
-        <h3>Transcoding Options</h3>
-        <div class="options-form">
-          <div class="form-group">
-            <label for="medium-bitrate">Medium Quality Bitrate (kbps)</label>
-            <input 
-              id="medium-bitrate" 
-              type="number" 
-              bind:value={mediumBitrate} 
-              min="64" 
-              max="320" 
-              step="32"
-            />
-          </div>
-          
-          <div class="form-group">
-            <label for="output-format">Output Format</label>
-            <select id="output-format" bind:value={outputFormat}>
-              <option value="mp3">MP3</option>
-              <option value="aac">AAC</option>
-              <option value="ogg">OGG</option>
-              <option value="flac">FLAC</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label for="output-dir">Output Directory</label>
-            <input 
-              id="output-dir" 
-              type="text" 
-              bind:value={outputDir} 
-            />
-          </div>
-        </div>
-      </div>
-    {/if}
-    
-    {#if isTranscoding}
-      <div class="transcoding-progress">
-        <p>Transcoding files... Please wait.</p>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: {transcodingProgress}%"></div>
-        </div>
-      </div>
-    {/if}
-    
-    {#if transcodedFiles.length > 0}
-      <div class="transcoded-files">
-        <h3>Transcoded Files</h3>
-        <div class="transcoded-list">
-          {#each transcodedFiles as file}
-            <div class="transcoded-item" class:failed={!file.success}>
-              <div class="file-path">{file?.input_path ? file.input_path.split('/').pop() : 'Unknown file'}</div>
-              {#if file.success}
-                <div class="success-label">✓ Transcoded</div>
-              {:else}
-                <div class="error-label">✗ Failed: {file.error || 'Unknown error'}</div>
-              {/if}
-            </div>
-          {/each}
-        </div>
-        
-        {#if !isEditingMetadata && extractedMetadata.length > 0}
-          <div class="edit-metadata-actions">
-            <button 
-              class="edit-metadata-button" 
-              on:click={editMetadata} 
-              disabled={isLoading || isTranscoding || isUploading}
+         <div class="edit-metadata-actions">
+            <button
+              class="edit-metadata-button"
+              on:click={openMetadataEditor}
+              disabled={isLoading || isUploading}
             >
               Edit Metadata Before Upload
             </button>
           </div>
-        {/if}
       </div>
     {/if}
-    
-    {#if isEditingMetadata && extractedMetadata.length > 0}
-      <div class="metadata-editor">
-        <div class="editor-header">
-          <h3>Edit Metadata</h3>
-          <div class="editor-actions">
-            {#if selectedTrackIndices.length > 0}
-              <button class="bulk-edit-button" on:click={startBulkEdit}>
-                Bulk Edit ({selectedTrackIndices.length} selected)
-              </button>
-            {/if}
-            <button class="save-button" on:click={finalizeMetadata}>Finalize Metadata</button>
-            <button class="cancel-button" on:click={cancelEditing}>Cancel</button>
-          </div>
-        </div>
-        
-        {#if bulkEditMode}
-          <div class="bulk-edit-panel">
-            <h4>Bulk Edit Selected Tracks ({selectedTrackIndices.length} selected)</h4>
-            <div class="bulk-edit-form">
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="bulk-album">Album</label>
-                  <input id="bulk-album" type="text" bind:value={bulkEditFields.album} placeholder="Album Name" />
-                </div>
-                
-                <div class="form-group">
-                  <label for="bulk-artist">Artist</label>
-                  <input id="bulk-artist" type="text" bind:value={bulkEditFields.artist} placeholder="Artist Name" />
-                </div>
-              </div>
-              
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="bulk-genre">Genre (comma separated)</label>
-                  <input id="bulk-genre" type="text" bind:value={bulkEditFields.genre} placeholder="Rock, Pop, Jazz..." />
-                </div>
-              </div>
-              
-              <div class="form-section">
-                <h5>Writers</h5>
-                <div class="tags-input">
-                  <input 
-                    type="text" 
-                    placeholder="Add writer (press Enter)" 
-                    on:keydown={(e) => {
-                      const target = e.target as HTMLInputElement;
-                      if (e.key === 'Enter' && target.value) {
-                        bulkEditFields.writers = [
-                          ...bulkEditFields.writers, 
-                          target.value
-                        ];
-                        bulkEditFields.writer_percentages = 
-                          bulkEditFields.writers.map(() => 
-                            Math.floor(100 / bulkEditFields.writers.length));
-                        target.value = '';
-                        validatePercentages();
-                      }
-                    }}
-                  />
-                </div>
-                
-                <div class="tags-list">
-                  {#if bulkEditFields.writers.length > 0}
-                    {#each bulkEditFields.writers as writer, i}
-                      <div class="tag-item">
-                        <span>{writer}</span>
-                        <div class="percentage-input">
-                          <input 
-                            type="number" 
-                            min="0" 
-                            max="100" 
-                            bind:value={bulkEditFields.writer_percentages[i]}
-                            on:input={validatePercentages}
-                          />
-                          <span>%</span>
-                        </div>
-                        <button class="remove-tag" on:click={() => {
-                          bulkEditFields.writers = 
-                            bulkEditFields.writers.filter((_, idx) => idx !== i);
-                          bulkEditFields.writer_percentages = 
-                            bulkEditFields.writer_percentages.filter((_, idx) => idx !== i);
-                          validatePercentages();
-                        }}>×</button>
-                      </div>
-                    {/each}
-                    
-                    {#if !bulkWriterPercentagesValid}
-                      <div class="validation-error">
-                        Writer percentages must sum to 100%
-                      </div>
-                    {/if}
-                  {/if}
-                </div>
-              </div>
-              
-              <div class="form-section">
-                <h5>Publishers</h5>
-                <div class="tags-input">
-                  <input 
-                    type="text" 
-                    placeholder="Add publisher (press Enter)" 
-                    on:keydown={(e) => {
-                      const target = e.target as HTMLInputElement;
-                      if (e.key === 'Enter' && target.value) {
-                        bulkEditFields.publishers = [
-                          ...bulkEditFields.publishers, 
-                          target.value
-                        ];
-                        bulkEditFields.publisher_percentages = 
-                          bulkEditFields.publishers.map(() => 
-                            Math.floor(100 / bulkEditFields.publishers.length));
-                        target.value = '';
-                        validatePercentages();
-                      }
-                    }}
-                  />
-                </div>
-                
-                <div class="tags-list">
-                  {#if bulkEditFields.publishers.length > 0}
-                    {#each bulkEditFields.publishers as publisher, i}
-                      <div class="tag-item">
-                        <span>{publisher}</span>
-                        <div class="percentage-input">
-                          <input 
-                            type="number" 
-                            min="0" 
-                            max="100" 
-                            bind:value={bulkEditFields.publisher_percentages[i]}
-                            on:input={validatePercentages}
-                          />
-                          <span>%</span>
-                        </div>
-                        <button class="remove-tag" on:click={() => {
-                          bulkEditFields.publishers = 
-                            bulkEditFields.publishers.filter((_, idx) => idx !== i);
-                          bulkEditFields.publisher_percentages = 
-                            bulkEditFields.publisher_percentages.filter((_, idx) => idx !== i);
-                          validatePercentages();
-                        }}>×</button>
-                      </div>
-                    {/each}
-                    
-                    {#if !bulkPublisherPercentagesValid}
-                      <div class="validation-error">
-                        Publisher percentages must sum to 100%
-                      </div>
-                    {/if}
-                  {/if}
-                </div>
-              </div>
-              
-              <div class="form-section">
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="bulk-instruments">Instruments</label>
-                    <TagSelector 
-                      tagOptions={$instrumentTags} 
-                      selectedTagsString={bulkEditFields.instruments}
-                      placeholder="Add instrument (press Enter)"
-                      on:tagsChanged={handleBulkInstrumentTagsChanged}
-                    />
-                  </div>
-                  
-                  <div class="form-group">
-                    <label for="bulk-mood">Mood</label>
-                    <TagSelector 
-                      tagOptions={$moodTags} 
-                      selectedTagsString={bulkEditFields.mood}
-                      placeholder="Add mood (press Enter)"
-                      on:tagsChanged={handleBulkMoodTagsChanged}
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div class="form-actions">
-                <button class="apply-button" on:click={applyBulkEdits}>Apply to Selected</button>
-                <button class="cancel-button" on:click={() => bulkEditMode = false}>Cancel</button>
-              </div>
-            </div>
-          </div>
-        {:else if selectedTrackIndex >= 0}
-          <div class="individual-edit-panel">
-            <h4>Edit Track: {extractedMetadata[selectedTrackIndex].track.title}</h4>
-            <div class="individual-edit-form">
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="track-title">Title</label>
-                  <input 
-                    id="track-title" 
-                    type="text" 
-                    bind:value={extractedMetadata[selectedTrackIndex].track.title} 
-                  />
-                </div>
-                
-                <div class="form-group">
-                  <label for="track-album">Album</label>
-                  <input 
-                    id="track-album" 
-                    type="text" 
-                    bind:value={extractedMetadata[selectedTrackIndex].album.name} 
-                  />
-                </div>
-              </div>
-              
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="track-artist">Artist</label>
-                  <input 
-                    id="track-artist" 
-                    type="text" 
-                    bind:value={extractedMetadata[selectedTrackIndex].album.artist} 
-                  />
-                </div>
-                
-                <div class="form-group">
-                  <label for="track-genre">Genre (comma separated)</label>
-                  <input 
-                    id="track-genre" 
-                    type="text" 
-                    value={extractedMetadata[selectedTrackIndex].track.genre.join(', ')} 
-                    on:input={(e) => {
-                      const target = e.target as HTMLInputElement;
-                      extractedMetadata[selectedTrackIndex].track.genre = target.value.split(',').map((g: string) => g.trim());
-                    }}
-                  />
-                </div>
-              </div>
-              
-              <div class="form-section">
-                <h5>Writers</h5>
-                <div class="tags-input">
-                  <input 
-                    type="text" 
-                    placeholder="Add writer (press Enter)" 
-                    on:keydown={(e) => {
-                      const target = e.target as HTMLInputElement;
-                      if (e.key === 'Enter' && target.value) {
-                        extractedMetadata[selectedTrackIndex].track.writers = [
-                          ...extractedMetadata[selectedTrackIndex].track.writers || [], 
-                          target.value
-                        ];
-                        extractedMetadata[selectedTrackIndex].track.writer_percentages = 
-                          extractedMetadata[selectedTrackIndex].track.writers.map(() => 
-                            Math.floor(100 / extractedMetadata[selectedTrackIndex].track.writers.length));
-                        target.value = '';
-                        validatePercentages();
-                      }
-                    }}
-                  />
-                </div>
-                
-                <div class="tags-list">
-                  {#if extractedMetadata[selectedTrackIndex].track.writers}
-                    {#each extractedMetadata[selectedTrackIndex].track.writers as writer, i}
-                      <div class="tag-item">
-                        <span>{writer}</span>
-                        <div class="percentage-input">
-                          <input 
-                            type="number" 
-                            min="0" 
-                            max="100" 
-                            bind:value={extractedMetadata[selectedTrackIndex].track.writer_percentages[i]}
-                            on:input={validatePercentages}
-                          />
-                          <span>%</span>
-                        </div>
-                        <button class="remove-tag" on:click={() => {
-                          extractedMetadata[selectedTrackIndex].track.writers = 
-                            extractedMetadata[selectedTrackIndex].track.writers.filter((_, idx) => idx !== i);
-                          extractedMetadata[selectedTrackIndex].track.writer_percentages = 
-                            extractedMetadata[selectedTrackIndex].track.writer_percentages.filter((_, idx) => idx !== i);
-                          validatePercentages();
-                        }}>×</button>
-                      </div>
-                    {/each}
-                    
-                    {#if !writerPercentagesValid}
-                      <div class="validation-error">
-                        Writer percentages must sum to 100%
-                      </div>
-                    {/if}
-                  {/if}
-                </div>
-              </div>
-              
-              <div class="form-section">
-                <h5>Publishers</h5>
-                <div class="tags-input">
-                  <input 
-                    type="text" 
-                    placeholder="Add publisher (press Enter)" 
-                    on:keydown={(e) => {
-                      const target = e.target as HTMLInputElement;
-                      if (e.key === 'Enter' && target.value) {
-                        extractedMetadata[selectedTrackIndex].track.publishers = [
-                          ...extractedMetadata[selectedTrackIndex].track.publishers || [], 
-                          target.value
-                        ];
-                        extractedMetadata[selectedTrackIndex].track.publisher_percentages = 
-                          extractedMetadata[selectedTrackIndex].track.publishers.map(() => 
-                            Math.floor(100 / extractedMetadata[selectedTrackIndex].track.publishers.length));
-                        target.value = '';
-                      }
-                    }}
-                  />
-                </div>
-                
-                <div class="tags-list">
-                  {#if extractedMetadata[selectedTrackIndex].track.publishers}
-                    {#each extractedMetadata[selectedTrackIndex].track.publishers as publisher, i}
-                      <div class="tag-item">
-                        <span>{publisher}</span>
-                        <div class="percentage-input">
-                          <input 
-                            type="number" 
-                            min="0" 
-                            max="100" 
-                            bind:value={extractedMetadata[selectedTrackIndex].track.publisher_percentages[i]}
-                            on:input={validatePercentages}
-                          />
-                          <span>%</span>
-                        </div>
-                        <button class="remove-tag" on:click={() => {
-                          extractedMetadata[selectedTrackIndex].track.publishers = 
-                            extractedMetadata[selectedTrackIndex].track.publishers.filter((_, idx) => idx !== i);
-                          extractedMetadata[selectedTrackIndex].track.publisher_percentages = 
-                            extractedMetadata[selectedTrackIndex].track.publisher_percentages.filter((_, idx) => idx !== i);
-                          validatePercentages();
-                        }}>×</button>
-                      </div>
-                    {/each}
-                    
-                    {#if !publisherPercentagesValid}
-                      <div class="validation-error">
-                        Publisher percentages must sum to 100%
-                      </div>
-                    {/if}
-                  {/if}
-                </div>
-              </div>
-              
-              <div class="form-section">
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="track-instruments">Instruments</label>
-                    <TagSelector 
-                      tagOptions={$instrumentTags} 
-                      selectedTagsString={extractedMetadata[selectedTrackIndex].track.instruments?.join(', ') || ''}
-                      placeholder="Add instrument (press Enter)"
-                      on:tagsChanged={handleInstrumentTagsChanged}
-                    />
-                  </div>
-                  
-                  <div class="form-group">
-                    <label for="track-mood">Mood</label>
-                    <TagSelector 
-                      tagOptions={$moodTags} 
-                      selectedTagsString={extractedMetadata[selectedTrackIndex].track.mood?.join(', ') || ''}
-                      placeholder="Add mood (press Enter)"
-                      on:tagsChanged={handleMoodTagsChanged}
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div class="form-section">
-                <div class="form-group">
-                  <label for="track-comments">Comments</label>
-                  <textarea 
-                    id="track-comments" 
-                    value={extractedMetadata[selectedTrackIndex].track.comments || ''} 
-                    on:input={(e) => {
-                      const target = e.target as HTMLTextAreaElement;
-                      extractedMetadata[selectedTrackIndex].track.comments = target.value;
-                    }}
-                    rows="3"
-                  ></textarea>
-                </div>
-              </div>
-              
-              <div class="form-actions">
-                <button class="save-button" on:click={saveTrackEdits}>Save</button>
-                <button class="cancel-button" on:click={() => selectedTrackIndex = -1}>Cancel</button>
-              </div>
-            </div>
-          </div>
-        {:else}
-          <div class="tracks-list">
-            <div class="tracks-header">
-              <div class="select-all-container">
-                <input 
-                  type="checkbox" 
-                  id="select-all-tracks"
-                  checked={selectedTrackIndices.length === extractedMetadata.length && extractedMetadata.length > 0}
-                  on:change={(e) => {
-                    const target = e.target as HTMLInputElement;
-                    selectAllTracks(target.checked);
-                  }} 
-                />
-                <label for="select-all-tracks">Select All</label>
-              </div>
-              {#if selectedTrackIndices.length > 0}
-                <button class="bulk-edit-button-small" on:click={startBulkEdit}>
-                  Bulk Edit ({selectedTrackIndices.length})
-                </button>
-              {/if}
-            </div>
-            
-            {#each extractedMetadata as metadata, i}
-              <div class="track-item" class:selected={selectedTrackIndices.includes(i)}>
-                <div class="track-select">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedTrackIndices.includes(i)}
-                    on:change={() => toggleTrackSelection(i)} 
-                  />
-                </div>
-                
-                <div class="track-info" on:click={() => editTrack(i)}>
-                  <div class="track-title">{metadata.track.title}</div>
-                  <div class="track-details">
-                    <span>{metadata.album.artist}</span>
-                    <span class="separator">•</span>
-                    <span>{metadata.album.name}</span>
-                    {#if metadata.track.genre && metadata.track.genre.length > 0}
-                      <span class="separator">•</span>
-                      <span>{metadata.track.genre.join(', ')}</span>
-                    {/if}
-                  </div>
-                  <div class="track-path">{metadata.track.original_path?.split('/').pop() || metadata.fileInfo.path.split('/').pop()}</div>
-                </div>
-                
-                <div class="track-actions">
-                  <button class="edit-button" on:click={() => editTrack(i)}>Edit</button>
-                </div>
-              </div>
-            {/each}
-          </div>
-        {/if}
-      </div>
+
+
+    <!-- Use the new UploadMetadataEditor component -->
+    {#if showMetadataEditor && uploadItemsMetadata.length > 0}
+      <UploadMetadataEditor
+        bind:uploadItemsMetadata={uploadItemsMetadata}
+        on:metadataUpdated={handleMetadataUpdated}
+        on:cancel={handleEditorCancel}
+        on:finalize={handleEditorFinalize}
+      />
     {/if}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     {#if isUploading}
       <div class="upload-progress">
-        <p>Uploading files to R2 and storing metadata in MongoDB... Please wait.</p>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: {uploadProgress}%"></div>
-        </div>
+        <p>Starting upload queue... Please wait.</p>
       </div>
     {/if}
     
-    {#if uploadedFiles.length > 0 || failedUploads.length > 0}
-      <div class="uploaded-files">
-        <h3>Upload Results</h3>
-        
-        {#if uploadedFiles.length > 0}
-          <h4>Successfully Uploaded ({uploadedFiles.length})</h4>
-          <div class="uploaded-list">
-            {#each uploadedFiles as file}
-              <div class="uploaded-item">
-                <div class="file-info">
-                  <div class="file-title">{file.title}</div>
-                  <div class="file-album">Album: {file.album_name}</div>
-                </div>
-                <div class="success-label">✓ Uploaded</div>
-              </div>
-            {/each}
-          </div>
-        {/if}
-        
-        {#if failedUploads.length > 0}
-          <h4>Failed Uploads ({failedUploads.length})</h4>
-          <div class="failed-list">
-            {#each failedUploads as file}
-              <div class="failed-item">
-                <div class="file-path">{file.original_path.split('/').pop()}</div>
-                <div class="error-label">✗ Failed: {file.error}</div>
-              </div>
-            {/each}
-          </div>
-        {/if}
-      </div>
-    {/if}
     
-    {#if selectedFilePaths.length > 0}
+    {#if uploadItemsMetadata.length > 0 && !showMetadataEditor}
       <div class="upload-actions">
-        <button 
-          class="transcode-button" 
-          on:click={transcodeFiles} 
-          disabled={isLoading || isTranscoding || isUploading}
-        >
-          Transcode {selectedFilePaths.length} {selectedFilePaths.length === 1 ? 'File' : 'Files'}
-        </button>
         
-        <button 
-          class="upload-button" 
-          on:click={uploadFiles} 
-          disabled={isLoading || isTranscoding || isUploading || transcodedFiles.length === 0 || isEditingMetadata}
+        <button
+          class="upload-button"
+          on:click={startUploadQueue}
+          disabled={isLoading || isUploading}
         >
-          Upload to Library
+          Start Upload Queue ({uploadItemsMetadata.length} {uploadItemsMetadata.length === 1 ? 'Item' : 'Items'})
         </button>
       </div>
       
@@ -1443,18 +720,16 @@
           <div class="debug-info">
             <p><strong>Button Control Variables:</strong></p>
             <ul>
-              <li>isLoading: {isLoading}</li>
-              <li>isTranscoding: {isTranscoding}</li>
-              <li>isUploading: {isUploading}</li>
-              <li>transcodedFiles.length: {transcodedFiles.length}</li>
-              <li>Button should be {isLoading || isTranscoding || isUploading || transcodedFiles.length === 0 ? 'DISABLED' : 'ENABLED'}</li>
+              <li>isLoading: {isLoading} (Metadata Extraction)</li>
+              <li>isUploading: {isUploading} (Starting Queue)</li>
+              <li>uploadItemsMetadata.length: {uploadItemsMetadata.length}</li>
+              <li>Upload Button should be {isLoading || isUploading ? 'DISABLED' : 'ENABLED'}</li>
             </ul>
             <button 
               class="debug-button" 
               on:click={() => {
-                isLoading = false;
-                isTranscoding = false;
-                isUploading = false;
+                isLoading = false; // Reset metadata loading
+                isUploading = false; // Reset queue start loading
                 console.log('Manually reset loading flags');
               }}
             >
@@ -1785,14 +1060,15 @@
     margin-bottom: 16px;
   }
   
-  /* Metadata Editing Styles */
-  .edit-metadata-actions {
+
+  /* Keep existing styles for preview, buttons etc. */
+  .edit-metadata-actions { /* Style for the button container */
     margin-top: 20px;
     display: flex;
     justify-content: center;
   }
-  
-  .edit-metadata-button {
+
+  .edit-metadata-button { /* Style for the "Edit Metadata" button */
     background-color: #805ad5;
     color: white;
     padding: 10px 20px;
@@ -1802,313 +1078,14 @@
     cursor: pointer;
     transition: background-color 0.3s;
   }
-  
+
   .edit-metadata-button:hover {
     background-color: #6b46c1;
   }
-  
-  .metadata-editor {
-    margin-top: 30px;
-    background-color: #f8fafc;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-  
-  .editor-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #e2e8f0;
-  }
-  
-  .editor-header h3 {
-    margin: 0;
-    color: #2d3748;
-  }
-  
-  .editor-actions {
-    display: flex;
-    gap: 10px;
-  }
-  
-  .save-button, .apply-button {
-    background-color: #4299e1;
-    color: white;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .save-button:hover, .apply-button:hover {
-    background-color: #3182ce;
-  }
-  
-  .cancel-button {
+
+  .edit-metadata-button:disabled {
     background-color: #a0aec0;
-    color: white;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    cursor: not-allowed;
   }
-  
-  .cancel-button:hover {
-    background-color: #718096;
-  }
-  
-  .bulk-edit-button {
-    background-color: #805ad5;
-    color: white;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .bulk-edit-button:hover {
-    background-color: #6b46c1;
-  }
-  
-  .edit-button {
-    background-color: #4299e1;
-    color: white;
-    padding: 4px 8px;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .edit-button:hover {
-    background-color: #3182ce;
-  }
-  
-  .bulk-edit-panel, .individual-edit-panel {
-    background-color: white;
-    border-radius: 6px;
-    padding: 16px;
-    margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-  
-  .bulk-edit-panel h4, .individual-edit-panel h4 {
-    margin-top: 0;
-    margin-bottom: 16px;
-    color: #2d3748;
-  }
-  
-  .bulk-edit-form, .individual-edit-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .form-row {
-    display: flex;
-    gap: 16px;
-  }
-  
-  .form-row .form-group {
-    flex: 1;
-  }
-  
-  .form-section {
-    margin-top: 16px;
-    margin-bottom: 16px;
-  }
-  
-  .form-section h5 {
-    margin-top: 0;
-    margin-bottom: 8px;
-    color: #4a5568;
-  }
-  
-  .tags-input {
-    margin-bottom: 8px;
-  }
-  
-  .tags-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  
-  .tag-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 8px;
-    background-color: #edf2f7;
-    border-radius: 4px;
-  }
-  
-  .tag-item span {
-    flex: 1;
-  }
-  
-  .percentage-input {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  
-  .percentage-input input {
-    width: 60px;
-    padding: 4px;
-    border: 1px solid #e2e8f0;
-    border-radius: 2px;
-  }
-  
-  .remove-tag {
-    background: none;
-    border: none;
-    color: #a0aec0;
-    cursor: pointer;
-    font-size: 16px;
-    padding: 0 4px;
-  }
-  
-  .remove-tag:hover {
-    color: #e53e3e;
-  }
-  
-  .validation-error {
-    color: #e53e3e;
-    font-size: 14px;
-  }
-  
-  .tracks-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 500px;
-    overflow-y: auto;
-  }
-  
-  .tracks-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 10px;
-    background-color: #f7fafc;
-    border-radius: 4px;
-    margin-bottom: 8px;
-  }
-  
-  .select-all-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .select-all-container label {
-    font-size: 14px;
-    color: #4a5568;
-    cursor: pointer;
-  }
-  
-  .bulk-edit-button-small {
-    background-color: #805ad5;
-    color: white;
-    padding: 4px 12px;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .bulk-edit-button-small:hover {
-    background-color: #6b46c1;
-  }
-  
-  .track-item {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    background-color: white;
-    border-radius: 4px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    transition: background-color 0.2s;
-  }
-  
-  .track-item:hover {
-    background-color: #f7fafc;
-  }
-  
-  .track-item.selected {
-    background-color: #ebf8ff;
-  }
-  
-  .track-select {
-    padding-right: 10px;
-  }
-  
-  .track-info {
-    flex: 1;
-    cursor: pointer;
-    padding: 0 10px;
-  }
-  
-  .track-title {
-    font-weight: 600;
-    color: #2d3748;
-    margin-bottom: 4px;
-  }
-  
-  .track-details {
-    display: flex;
-    align-items: center;
-    font-size: 14px;
-    color: #4a5568;
-    margin-bottom: 4px;
-  }
-  
-  .separator {
-    margin: 0 6px;
-    color: #cbd5e0;
-  }
-  
-  .track-path {
-    font-size: 12px;
-    color: #718096;
-  }
-  
-  .track-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  textarea {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
-    resize: vertical;
-    font-family: inherit;
-  }
-  
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 16px;
-  }
-  
-  .bulk-hint {
-    font-size: 12px;
-    color: #718096;
-    margin-top: 4px;
-    font-style: italic;
-  }
-</style> 
+
+</style>

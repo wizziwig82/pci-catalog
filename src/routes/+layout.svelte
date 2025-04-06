@@ -2,6 +2,7 @@
 	import '../app.css';
 	import { onMount } from 'svelte';
 	import { invoke } from '@tauri-apps/api/core';
+	import NotificationsDisplay from '$lib/components/NotificationsDisplay.svelte'; // Import the component
 
 	onMount(async () => {
 		console.log('Layout mounted, attempting to initialize R2 client...');
@@ -38,6 +39,7 @@
 
 <main>
 	<slot></slot>
+	<NotificationsDisplay /> <!-- Add the component here -->
 </main>
 
 <style lang="postcss">

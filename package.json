@@ -74,7 +74,6 @@
 		"@oslojs/encoding": "^1.1.0",
 		"@tauri-apps/api": "^2.4.0",
 		"@tauri-apps/plugin-stronghold": "^2.2.0",
-		"drizzle-orm": "^0.40.0",
-		"mongodb": "^6.15.0"
+		"drizzle-orm": "^0.40.0"
 	}
 }
