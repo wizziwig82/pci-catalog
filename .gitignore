@@ -15,6 +15,7 @@ yarn-error.log
 
 # Tauri
 /src-tauri/target
+/src-tauri/target 2/ # Ignore the duplicated target directory
 /src-tauri/Cargo.lock
 /src-tauri/pnpm-lock.yaml
 /src-tauri/dist

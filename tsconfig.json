@@ -9,7 +9,8 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"typeRoots": ["./node_modules/@types", "./src/lib/tauri"]
+		// Removed explicit types array, relying on default type resolution
+		"typeRoots": ["./node_modules/@types"] // Removed src/lib/tauri
 	},
 	// Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
 	//
@@ -26,6 +27,5 @@
 		"tests/**/*.js",
 		"tests/**/*.ts",
 		"tests/**/*.svelte",
-		"src/lib/tauri/**/*.d.ts"
 	]
 }

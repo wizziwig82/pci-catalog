@@ -1,12 +1,13 @@
 import { sequence } from '@sveltejs/kit/hooks';
-import * as auth from '$lib/server/auth.js';
+import * as auth from '$features/auth/server/auth';
 import type { Handle } from '@sveltejs/kit';
 import { paraglideMiddleware } from '$lib/paraglide/server';
 
 const handleParaglide: Handle = ({ event, resolve }) =>
-	paraglideMiddleware(event.request, ({ request, locale }) => {
-		event.request = request;
+	paraglideMiddleware(event.request, ({ locale }) => {
+		// Removed: event.request = request; - Avoid overwriting the original request object
 
+		// Resolve with the original event, but use the locale from Paraglide
 		return resolve(event, {
 			transformPageChunk: ({ html }) => html.replace('%paraglide.lang%', locale)
 		});

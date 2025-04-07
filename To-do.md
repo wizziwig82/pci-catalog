@@ -52,21 +52,21 @@ This to-do list outlines the steps to build a music management app, covering set
 ## Phase 2: Editing and Search
 ### 2.1 Implement Database Catalog Page
 
-- [ ] Create a new tab/page in the UI for displaying the uploaded catalog.
-- [ ] Design and implement a table component to display tracks and their metadata.
-- [ ] Add column sorting functionality for all metadata fields.
-- [ ] Implement track selection (individual and multiple) for editing.
-- [ ] Add edit mode for selected tracks with metadata editing capabilities.
-- [ ] Implement functionality to replace audio files for existing tracks.
-- [ ] Add functionality to delete records from both MongoDB and R2.
-- [ ] Write component tests for the catalog table UI (in tests/unit/frontend/components).
-- [ ] Write integration tests for the track management functionality (in tests/integration/catalog-management).
+- [x] Create a new tab/page in the UI for displaying the uploaded catalog. (Verified: 2025-04-05)
+- [x] Design and implement a table component to display tracks and their metadata. (Verified: 2025-04-05)
+- [x] Add column sorting functionality for all metadata fields. (Verified: 2025-04-05)
+- [x] Implement track selection (individual and multiple) for editing. (Checkboxes implemented: 2025-04-05)
+- [x] Add edit mode for selected tracks with metadata editing capabilities. (Verified reuse: 2025-04-05)
+- [x] Implement functionality to replace audio files for existing tracks. (Completed: 2025-04-04)
+- [x] Add functionality to delete records from both MongoDB and R2. (Completed: 2025-04-04)
+- [~] Write component tests for the catalog table UI (in tests/unit/frontend/components). (Basic tests added: 2025-04-05)
+- [x] Write integration tests for the track management functionality (in tests/integration/catalog-management). (Completed: 2025-04-04)
 
 ### 2.2 Implement Bulk Editing in Database Page
 
-- [ ] Integrate the bulk editing UI with the database catalog page.
-- [ ] Allow editing fields like Writers, Publishers, Album, Genre, Instruments, and Mood for selected tracks.
-- [ ] Add validation to ensure writer_percentages and publisher_percentages sum to 100%.
+- [x] Integrate the bulk editing UI with the database catalog page. (Via MetadataEditor: 2025-04-05)
+- [x] Allow editing fields like Writers, Publishers, Album, Genre, Instruments, and Mood for selected tracks. (Via MetadataEditor: 2025-04-05)
+- [x] Add validation to ensure writer_percentages and publisher_percentages sum to 100%. (Verified: 2025-04-05)
 - [ ] Develop backend logic in Rust to update the corresponding MongoDB documents.
 - [ ] Write unit tests for percentage validation logic (in tests/unit/backend/metadata).
 - [ ] Write component tests for the bulk editing UI (in tests/unit/frontend/components).

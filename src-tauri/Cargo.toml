@@ -12,44 +12,51 @@ rust-version = "1.77.2"
 
 [lib]
 name = "app_lib"
+path = "src/lib.rs"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2.1.0", features = [] }
 
 [dependencies]
-serde_json = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-log = "0.4"
-tauri = { version = "2.0.0", features = [] }
-tauri-plugin-log = "2.0.0-rc"
-tauri-plugin-fs = "2.0.0-rc"
-tauri-plugin-dialog = "2.0.0-rc"
-mongodb = { version = "2.6.1", features = ["tokio-runtime"] }
-tokio = { version = "1.35.1", features = ["full", "sync"] }
-futures-util = "0.3.29"
-futures = "0.3.29"
-parking_lot = "0.12.1"
+anyhow = "1.0.75"
+# app_lib = { path = "." } # Causes a dependency cycle
 aws-config = "1.0.1"
 aws-sdk-s3 = "1.0.0"
-aws-smithy-types = "1.0.1"
 aws-smithy-http-client = "1.0.1"
+aws-smithy-types = "1.0.1"
 bytes = "1.5.0"
-http = "0.2.9"
-anyhow = "1.0.75"
-thiserror = "1.0.50"
-dirs = "5.0"
-keyring = "3.6.2"
-url = "2.5.0"
-security-framework = "3.2.0"
-objc2-foundation = "0.2.0"
-symphonia = { version = "0.5.3", features = ["mp3", "aac", "isomp4", "wav", "flac", "ogg", "alac"] }
-id3 = "1.10.0"
-uuid = { version = "1.6.1", features = ["v4", "serde"] }
-mime_guess = "2.0.4"
 chrono = { version = "0.4.31", features = ["serde"] }
-tempfile = "3.10.0"
-regex = "1.10.4"
+dirs = "5.0"
 env_logger = "0.11" # Added for logging initialization
+futures = "0.3.29"
+futures-util = "0.3.29"
+http = "0.2.9"
+id3 = "1.10.0"
+keyring = "3.6.2"
+log = "0.4"
+lofty = "0.19" # Added for audio metadata extraction
+mime_guess = "2.0.4"
+mongodb = { version = "2.6.1", features = ["tokio-runtime"] }
+objc2-foundation = "0.2.0"
+parking_lot = "0.12.1"
+rand = "0.8" # Added for argon2 salt generation
+regex = "1.10.4"
+security-framework = "3.2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+symphonia = { version = "0.5.3", features = ["mp3", "aac", "isomp4", "wav", "flac", "ogg", "alac"] }
+tauri = { version = "2.0.0", features = [] }
+tauri-plugin-dialog = "2.0.0-rc"
+tauri-plugin-fs = "2.0.0-rc"
+tauri-plugin-log = "2.0.0-rc"
 tauri-plugin-shell = "2.0.0-rc" # Added for shell plugin
+tempfile = "3.10.0"
+thiserror = "1.0.50"
+tokio = { version = "1.35.1", features = ["full", "sync"] }
+url = "2.5.0"
+uuid = { version = "1.6.1", features = ["v4", "serde"] }
+
 [features]
+# default = [ "custom-protocol" ]
+# custom-protocol = [ "tauri/custom-protocol" ]

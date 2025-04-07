@@ -101,8 +101,16 @@ impl From<keyring::Error> for CommandError {
 }
 
 // Add From implementations for other relevant error types as needed
-// e.g., crate::audio::transcoding::TranscodingError
 
+// Convert specific transcoding errors into the general CommandError::Transcoding variant
+impl From<crate::features::upload::audio::error::TranscodingError> for CommandError { // Corrected path
+    fn from(err: crate::features::upload::audio::error::TranscodingError) -> Self { // Corrected path
+        // Log the specific error for debugging purposes
+        log::error!("Transcoding Error Occurred: {}", err);
+        // Return the generic Transcoding error with the specific error message
+        CommandError::Transcoding(err.to_string())
+    }
+}
 // Allow converting CommandError to a simple String for cases where the frontend
 // might still expect a basic string error (though using the structured error is better).
 // Consider removing this if the frontend fully adapts to the structured error.

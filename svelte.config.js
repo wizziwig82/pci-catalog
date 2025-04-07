@@ -1,14 +1,18 @@
-import { mdsvex } from 'mdsvex';
-import adapter from '@sveltejs/adapter-auto';
+import adapter from '@sveltejs/adapter-static'; // Changed to static adapter
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const config = {
 	preprocess: [
 		vitePreprocess(),
-		// mdsvex() // Temporarily comment out mdsvex
 	],
-	kit: { adapter: adapter() },
-	extensions: ['.svelte', '.svx']
+	kit: {
+		adapter: adapter(),
+		alias: {
+			// Define alias for feature modules
+			'$features': 'src/features'
+		}
+	},
+	extensions: ['.svelte']
 };
 
 export default config;

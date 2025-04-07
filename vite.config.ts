@@ -3,6 +3,8 @@ import { svelteTesting } from '@testing-library/svelte/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+import path from 'node:path'; // Use node: prefix
+import { fileURLToPath } from 'node:url'; // Import fileURLToPath
 
 export default defineConfig({
 	plugins: [
@@ -12,31 +14,23 @@ export default defineConfig({
 			project: './project.inlang',
 			outdir: './src/lib/paraglide'
 		}),
+		svelteTesting(), // Add testing library plugin for Svelte
 	],
+	// Vitest configuration consolidated here
 	test: {
-		workspace: [
-			{
-				extends: './vite.config.ts',
-				plugins: [svelteTesting()],
-				test: {
-					name: 'client',
-					environment: 'jsdom',
-					clearMocks: true,
-					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
-					exclude: ['src/lib/server/**'],
-					setupFiles: ['./vitest-setup-client.ts']
-				}
-			},
-			{
-				extends: './vite.config.ts',
-				test: {
-					name: 'server',
-					environment: 'node',
-					include: ['src/**/*.{test,spec}.{js,ts}'],
-					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
-				}
-			}
-		]
+		globals: true,
+		environment: 'jsdom', // Enable JSDOM for testing Svelte components
+		setupFiles: ['./vitest-setup-client.ts'], // Use only client setup for jsdom environment
+		include: ['./tests/**/*.test.ts', 'src/**/*.{test,spec}.{js,ts}'], // Include tests and src tests
+		// Consider if specific excludes are needed if not using workspaces
+		deps: {
+		  inline: [/svelte/]
+		},
+		coverage: {
+		  provider: 'v8',
+		  reporter: ['text', 'json', 'html'],
+		  include: ['src/**/*.{ts,js,svelte}'] // Focus coverage on src
+		}
 	},
 	// Prevent vite from obscuring Rust errors
 	clearScreen: false,
@@ -61,7 +55,10 @@ export default defineConfig({
 	// Configure resolve aliases
 	resolve: {
 		alias: {
-			'@': '/src'
+			// Use import.meta.url for robust path resolution
+			'@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), './src'),
+			'$lib': path.resolve(path.dirname(fileURLToPath(import.meta.url)), './src/lib'), // Ensure $lib alias is here
+			'$features': path.resolve(path.dirname(fileURLToPath(import.meta.url)), './src/features') // Add $features alias
 		}
 	}
 });
